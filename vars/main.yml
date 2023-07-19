@@ -1,0 +1,4 @@
+---
+# vars file for init_k8s
+deploy_traefik: false
+deploy_nginx: true

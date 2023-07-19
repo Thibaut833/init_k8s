@@ -1,0 +1,202 @@
+---
+# tasks file for init_k8s
+
+- name: J'installe le paquet open-iscsi et python3-kubernetes
+  ansible.builtin.apt:
+    name:
+      - open-iscsi
+      - python3-kubernetes
+    state: present
+    update_cache: true
+
+- name: Je configure le cluster sur le controlplane
+  delegate_to: kub0
+  run_once: true
+  block:
+    - name: Je vérifie si le cluster tourne
+      ansible.builtin.uri:
+        url: "https://{{ ansible_host }}:6443/healthz"
+        method: GET
+        validate_certs: false
+        status_code: ["200", "-1"]
+      register: check_k8s
+      ignore_errors: true
+
+    - name: J'initialise le cluster kube sur le controlplane
+      ansible.builtin.command:
+        cmd: kubeadm init --pod-network-cidr=10.244.0.0/16
+      register: init_controlplane
+      changed_when: init_controlplane.rc == 0
+      when:
+        - check_k8s.status != 200
+        - check_k8s.json is not defined or check_k8s.json != "ok"
+
+    - name: Je mets l'export kubeconfig dans zshrc du controlplane
+      ansible.builtin.lineinfile:
+        path: ~/.zshrc
+        insertafter: EOF
+        line: "export KUBECONFIG=/etc/kubernetes/admin.conf"
+
+    - name: Je crée la commande pour rejoindre le controlplane
+      ansible.builtin.set_fact:
+        kubeadm_join: "{{ init_controlplane.stdout_lines[-2:] | join('') | regex_replace('\\\\\\t', '') }}"
+      when:
+        - check_k8s.status != 200
+        - check_k8s.json is not defined or check_k8s.json != "ok"
+
+    - name: J'installe Flannel
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+
+    - name: J'installe Longhorn
+      block:
+        - name: Je regarde si le module iscsi_tcp est bien chargé
+          community.general.modprobe:
+            name: "iscsi_tcp"
+            state: present
+
+        - name: J'installe le nfsv4 client
+          ansible.builtin.apt:
+            name: nfs-common
+
+        - name: Je copie la conf longhorn sur l'hote
+          ansible.builtin.copy:
+            src: "{{ role_path }}/files/longhorn.yaml"
+            dest: ~/longhorn-cluster.yaml
+            mode: "660"
+
+        - name: Je lance le déploiement de longhorn
+          kubernetes.core.k8s:
+            state: present
+            kubeconfig: /etc/kubernetes/admin.conf
+            src: ~/longhorn-cluster.yaml
+
+- name: Je fais rejoindre les noeuds sur le cluster kube
+  ansible.builtin.command:
+    cmd: "{{ hostvars['kub0']['kubeadm_join'] }}"
+  register: workers_join_cluster
+  changed_when: workers_join_cluster.rc == 0
+  delegate_to: "{{ item }}"
+  run_once: true
+  loop:
+    - kub1
+    - kub2
+    - kub3
+  when:
+    - check_k8s.status != 200
+    - check_k8s.json is not defined or check_k8s.json != "ok"
+
+- name: J'installe Metallb
+  delegate_to: kub0
+  run_once: true
+  block:
+    - name: Je déploie Metallb
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: https://raw.githubusercontent.com/metallb/metallb/v0.13.10/config/manifests/metallb-native.yaml
+        wait: true
+        wait_timeout: 240
+        wait_sleep: 20
+
+    - name: Je copie mon fichier de conf de pool d'adresse
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/metallb-ipaddresspool.yaml"
+        dest: ~/metallb-pool.yaml
+        mode: "660"
+
+    - name: Je crée mon pool d'adresse
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: ~/metallb-pool.yaml
+
+- name: J'installe helm
+  delegate_to: kub0
+  run_once: true
+  block:
+    - name: J'ajoute la clé du repo helm
+      ansible.builtin.get_url:
+        url: https://baltocdn.com/helm/signing.asc
+        dest: /tmp/helm-signing.asc
+        mode: "a+r"
+        force: "true"
+
+    - name: Je vérifie la présence de la clé gpg helm dans le folder apt keyrings
+      ansible.builtin.stat:
+        path: "/etc/apt/keyrings/helm.gpg"
+      register: exists_helmasc
+
+    - name: Je de-armor la clé helm
+      ansible.builtin.shell: gpg --dearmor < /tmp/helm-signing.asc > /etc/apt/keyrings/helm.gpg
+      when: not exists_helmasc.stat.exists
+
+    - name: J'autorise la lecture pour tous sur la clé helm
+      ansible.builtin.file:
+        path: /etc/apt/keyrings/helm.gpg
+        mode: "a+r"
+
+    - name: J'ajoute le repository helm
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main"
+
+    - name: J'installe le paquet helm
+      ansible.builtin.apt:
+        name: helm
+        state: present
+        update_cache: true
+
+- name: J'installe Traefik
+  delegate_to: kub0
+  when: deploy_traefik | bool is true and deploy_nginx | bool is false
+  run_once: true
+  block:
+    - name: Je copie mon fichier de variables pour traefik
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/traefikvars.yaml"
+        dest: ~/traefikvars.yaml
+        mode: "660"
+
+    - name: J'ajoute le repo helm traefik
+      kubernetes.core.helm_repository:
+        repo_name: traefik
+        repo_url: https://traefik.github.io/charts
+        repo_state: present
+
+    - name: J'installe Traefik via helm
+      kubernetes.core.helm:
+        release_name: prox-traefik
+        release_namespace: prox-traefik
+        kubeconfig: /etc/kubernetes/admin.conf
+        chart_ref: traefik/traefik
+        create_namespace: true
+        values_files: "~/traefikvars.yaml"
+        state: present
+        chart_version: 23.1.0
+
+- name: J'installe Nginx ingress controller
+  delegate_to: kub0
+  when: deploy_nginx | bool is true and deploy_traefik | bool is false
+  run_once: true
+  block:
+    - name: Je récupère le manifest
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/cloud/deploy.yaml
+        dest: ~/nginx-ingress-deploy.yaml
+        mode: "770"
+
+    - name: Je modifie le deployment de l'ingress controller en daemonset
+      ansible.builtin.lineinfile:
+        path: ~/nginx-ingress-deploy.yaml
+        mode: "770"
+        search_string: "kind: Deployment"
+        line: "kind: DaemonSet"
+        state: present
+
+    - name: Je lance le déploiement de nginx ingress controller
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: ~/nginx-ingress-deploy.yaml
