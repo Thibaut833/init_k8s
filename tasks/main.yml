@@ -101,9 +101,9 @@
         wait_timeout: 240
         wait_sleep: 20
 
-    - name: Je copie mon fichier de conf de pool d'adresse
-      ansible.builtin.copy:
-        src: "{{ role_path }}/files/metallb-ipaddresspool.yaml"
+    - name: Je génère le fichier de conf metallb
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/metallb-ipaddresspool.j2"
         dest: ~/metallb-pool.yaml
         mode: "660"
 
