@@ -1,4 +1,4 @@
-Base
+Init_k8s
 =========
 
 Installation basique des paquets et configuration shell
