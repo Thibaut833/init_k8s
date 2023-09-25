@@ -1,7 +1,7 @@
 Init_k8s
 =========
 
-Installation basique des paquets et configuration shell
+Initialisation du cluster kubernetes avec kubeadm.
 
 Requirements
 ------------
