@@ -10,7 +10,7 @@
     update_cache: true
 
 - name: Je configure le cluster sur le controlplane
-  delegate_to: kub[0]
+  delegate_to: "{{ play_hosts | first }}"
   run_once: true
   block:
     - name: Je vérifie si le cluster tourne
@@ -117,14 +117,14 @@
     cmd: "{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}"
   register: workers_join_cluster
   changed_when: workers_join_cluster.rc == 0
-  delegate_to: kub:!kub[0]
+  delegate_to: "{{ play_hosts[1:] }}"
   run_once: true
   when:
     - check_k8s.status != 200
     - check_k8s.json is not defined or check_k8s.json != "ok"
 
 - name: J'installe Metallb
-  delegate_to: kub[0]
+  delegate_to: "{{ play_hosts | first }}"
   run_once: true
   block:
     - name: Je déploie Metallb
@@ -149,7 +149,7 @@
         src: ~/metallb-pool.yaml
 
 - name: J'installe helm
-  delegate_to: kub[0]
+  delegate_to: "{{ play_hosts | first }}"
   run_once: true
   block:
     - name: J'ajoute la clé du repo helm
@@ -184,7 +184,7 @@
         update_cache: true
 
 - name: J'installe Traefik
-  delegate_to: kub[0]
+  delegate_to: "{{ play_hosts | first }}"
   when: deploy_traefik | bool is true and deploy_nginx | bool is false
   run_once: true
   block:
@@ -212,7 +212,7 @@
         chart_version: 23.1.0
 
 - name: J'installe Nginx ingress controller
-  delegate_to: kub[0]
+  delegate_to: "{{ play_hosts | first }}"
   when: deploy_nginx | bool is true and deploy_traefik | bool is false
   run_once: true
   block:
