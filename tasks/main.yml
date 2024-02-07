@@ -117,8 +117,9 @@
     cmd: "{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}"
   register: workers_join_cluster
   changed_when: workers_join_cluster.rc == 0
-  delegate_to: "{{ play_hosts[1:] | join(',') }}"
+  delegate_to: "{{ item }}"
   run_once: true
+  loop: "{{ play_hosts[1:] }}"
   when:
     - check_k8s.status != 200
     - check_k8s.json is not defined or check_k8s.json != "ok"
