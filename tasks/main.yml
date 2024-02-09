@@ -128,13 +128,19 @@
   delegate_to: "{{ play_hosts | first }}"
   run_once: true
   block:
+    - name: Je récupère la version de Metall
+      when: version_metallb is not defined
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/metallb/metallb/releases
+      register: releases_metallb
+    
     - name: Je déploie Metallb
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
-        src: https://raw.githubusercontent.com/metallb/metallb/v0.13.10/config/manifests/metallb-native.yaml
+        src: https://raw.githubusercontent.com/metallb/metallb/{% if version_metallb is not defined %}{{ releases_metallb.json[0].tag_name }}{% else %}{{ version_metallb }}{% endif %}/config/manifests/metallb-native.yaml
         wait: true
-        wait_timeout: 240
+        wait_timeout: 480
         wait_sleep: 20
 
     - name: Je génère le fichier de conf metallb
@@ -217,9 +223,14 @@
   when: deploy_nginx | bool is true and deploy_traefik | bool is false
   run_once: true
   block:
+    - name: Je récupère la version de Nginx ingress controller
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/metallb/metallb/releases
+      register: releases_nginxing
+
     - name: Je récupère le manifest
       ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/cloud/deploy.yaml
+        url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ version_nginxing }}/deploy/static/provider/cloud/deploy.yaml
         dest: ~/nginx-ingress-deploy.yaml
         mode: "770"
 
