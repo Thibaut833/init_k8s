@@ -52,7 +52,7 @@
       when: deploy_flannel is true
 
     - name: J'installe Calico
-      when: deploy_flannel is true
+      when: deploy_calico is true
       block:
         - name: J'installe l'operateur
           kubernetes.core.k8s:
