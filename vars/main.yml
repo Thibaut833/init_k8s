@@ -8,3 +8,4 @@ deploy_openebs: true
 deploy_longhorn: false
 version_metallb: "v0.14.3"
 version_nginxing: "v1.9.6"
+version_calico: "v3.27.0"

@@ -58,13 +58,7 @@
           kubernetes.core.k8s:
             state: present
             kubeconfig: /etc/kubernetes/admin.conf
-            src: https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/tigera-operator.yaml
-        
-        - name: J'installe les custom ressources de Calico
-          kubernetes.core.k8s:
-            state: present
-            kubeconfig: /etc/kubernetes/admin.conf
-            src: https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/custom-resources.yaml
+            src: https://raw.githubusercontent.com/projectcalico/calico/{{ version_calico }}/manifests/calico.yaml
       
     - name: J'installe Longhorn
       when: deploy_longhorn is true
