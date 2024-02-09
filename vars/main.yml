@@ -6,5 +6,5 @@ deploy_flannel: false
 deploy_calico: true
 deploy_openebs: true
 deploy_longhorn: false
-version_metallb: "v0.14.3 "
+version_metallb: "v0.14.3"
 version_nginxing: "v1.9.6"
