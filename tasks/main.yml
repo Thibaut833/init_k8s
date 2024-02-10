@@ -106,6 +106,12 @@
             kubeconfig: /etc/kubernetes/admin.conf
             src: https://openebs.github.io/charts/openebs-operator.yaml
 
+        - name: Je lance le déploiement de openebs cstor operator
+          kubernetes.core.k8s:
+            state: present
+            kubeconfig: /etc/kubernetes/admin.conf
+            src: https://openebs.github.io/charts/cstor-operator.yaml
+
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
     cmd: "{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}"
