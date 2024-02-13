@@ -5,6 +5,7 @@ metadata:
   namespace: openebs
 spec:
   pools:
+    {% for item in bdebs %}
     - nodeSelector:
         kubernetes.io/hostname: "{{ item[node] }}"
       dataRaidGroups:
