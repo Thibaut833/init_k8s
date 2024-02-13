@@ -129,6 +129,10 @@
           ansible.builtin.set_fact:
             bdebs: "{{ bloc_devices.stdout_lines | map('regex_replace', '\\\\', '') | list }}"
 
+        - name: Je debug bdebs
+          ansible.builtin.debug:
+            msg: "{{ bdebs }}"
+
         - name: Je copie mon template pour le cstorpoolcluster
           ansible.builtin.template:
             src: "{{ role_path }}/templates/cspc.j2"
