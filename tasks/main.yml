@@ -76,14 +76,14 @@
         - name: Je copie la conf longhorn sur l'hote
           ansible.builtin.copy:
             src: "{{ role_path }}/files/longhorn.yaml"
-            dest: ~/longhorn-cluster.yaml
+            dest: /srv/longhorn-cluster.yaml
             mode: "660"
 
         - name: Je lance le déploiement de longhorn
           kubernetes.core.k8s:
             state: present
             kubeconfig: /etc/kubernetes/admin.conf
-            src: ~/longhorn-cluster.yaml
+            src: /srv/longhorn-cluster.yaml
 
     - name: J'installe OpenEBS
       when: deploy_openebs is true
@@ -111,6 +111,35 @@
             state: present
             kubeconfig: /etc/kubernetes/admin.conf
             src: https://openebs.github.io/charts/cstor-operator.yaml
+
+        - name: J'installe le paquet jq
+          ansible.builtin.apt:
+            name: jq
+            update_cache: true
+            state: present
+
+        - name: Je récupère les blocs devices
+          ansible.builtin.shell:
+            cmd: "kubectl get bd -n openebs --kubeconfig=/etc/kubernetes/admin.conf -o=json | jq -c '.items[] | select(.spec.capacity.storage == {{ oebssizestordisk }}) | {bd: .metadata.name, node: .metadata.labels.nodename}'"
+          register: bloc_devices
+          when: oebssizestordisk is defined
+          failed_when: oebssizestordisk is not defined
+
+        - name: Je recupère les bloc devices
+          ansible.builtin.set_fact:
+            bdebs: "{{ bloc_devices.stdout_lines | map('regex_replace', '\\\\', '') | list }}"
+
+        - name: Je copie mon template pour le cstorpoolcluster
+          ansible.builtin.template:
+            src: "{{ role_path }}/templates/cspc.j2"
+            dest: /srv/cspc.yaml
+            mode: "660"
+
+        - name: Je lance le déploiement de openebs cstorpoolcluster
+          kubernetes.core.k8s:
+            state: present
+            kubeconfig: /etc/kubernetes/admin.conf
+            src: /srv/cspc.yaml
 
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
@@ -146,14 +175,14 @@
     - name: Je génère le fichier de conf metallb
       ansible.builtin.template:
         src: "{{ role_path }}/templates/metallb-ipaddresspool.j2"
-        dest: ~/metallb-pool.yaml
+        dest: /srv/metallb-pool.yaml
         mode: "660"
 
     - name: Je crée mon pool d'adresse
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
-        src: ~/metallb-pool.yaml
+        src: /srv/metallb-pool.yaml
 
 - name: J'installe helm
   delegate_to: "{{ play_hosts | first }}"
@@ -198,7 +227,7 @@
     - name: Je copie mon fichier de variables pour traefik
       ansible.builtin.copy:
         src: "{{ role_path }}/files/traefikvars.yaml"
-        dest: ~/traefikvars.yaml
+        dest: /srv/traefikvars.yaml
         mode: "660"
 
     - name: J'ajoute le repo helm traefik
@@ -214,7 +243,7 @@
         kubeconfig: /etc/kubernetes/admin.conf
         chart_ref: traefik/traefik
         create_namespace: true
-        values_files: "~/traefikvars.yaml"
+        values_files: "/srv/traefikvars.yaml"
         state: present
         chart_version: 23.1.0
 
@@ -231,12 +260,12 @@
     - name: Je récupère le manifest
       ansible.builtin.get_url:
         url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ version_nginxing }}/deploy/static/provider/cloud/deploy.yaml
-        dest: ~/nginx-ingress-deploy.yaml
+        dest: /srv/nginx-ingress-deploy.yaml
         mode: "770"
 
     - name: Je modifie le deployment de l'ingress controller en daemonset
       ansible.builtin.lineinfile:
-        path: ~/nginx-ingress-deploy.yaml
+        path: /srv/nginx-ingress-deploy.yaml
         mode: "770"
         search_string: "kind: Deployment"
         line: "kind: DaemonSet"
@@ -246,4 +275,4 @@
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
-        src: ~/nginx-ingress-deploy.yaml
+        src: /srv/nginx-ingress-deploy.yaml
