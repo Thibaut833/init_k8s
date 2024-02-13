@@ -105,12 +105,14 @@
             state: present
             kubeconfig: /etc/kubernetes/admin.conf
             src: https://openebs.github.io/charts/openebs-operator.yaml
+            wait: true
 
         - name: Je lance le déploiement de openebs cstor operator
           kubernetes.core.k8s:
             state: present
             kubeconfig: /etc/kubernetes/admin.conf
             src: https://openebs.github.io/charts/cstor-operator.yaml
+            wait: true
 
         - name: J'installe le paquet jq
           ansible.builtin.apt:
@@ -125,13 +127,9 @@
           when: oebssizestordisk is defined
           failed_when: oebssizestordisk is not defined
 
-        - name: Je recupère les bloc devices
+        - name: Je mets les bds dans une var 
           ansible.builtin.set_fact:
             bdebs: "{{ bloc_devices.stdout_lines | map('regex_replace', '\\\\', '') | list }}"
-
-        - name: Je debug bdebs
-          ansible.builtin.debug:
-            msg: "{{ bdebs }}"
 
         - name: Je copie mon template pour le cstorpoolcluster
           ansible.builtin.template:
