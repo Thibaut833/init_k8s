@@ -168,7 +168,7 @@
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
-        src: /srv/cstor-csi-disk.j2.yaml
+        src: /srv/cstor-csi-disk.yaml
 
 - name: J'installe Longhorn
   delegate_to: "{{ play_hosts | first }}"
