@@ -153,7 +153,7 @@
     - name: Je debug bdebs
       ansible.builtin.debug:
         msg: "{{ item }}{{ item[node] }}"
-      loop: bdebs
+      loop: "{{ bdebs }}"
 
     - name: Je copie mon template pour le cstorpoolcluster
       ansible.builtin.template:
