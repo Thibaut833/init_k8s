@@ -7,10 +7,10 @@ spec:
   pools:
 {% for item in bdebs %}
     - nodeSelector:
-        kubernetes.io/hostname: "{{ item[node] }}"
+        kubernetes.io/hostname: "{{ item | from_json | json_query('node') }}"
       dataRaidGroups:
         - blockDevices:
-          - blockDeviceName: "{{ item[bd] }}"
+          - blockDeviceName: "{{ item | from_json | json_query('bd') }}"
       poolConfig:
         dataRaidGroupType: "stripe"
 {% endfor %}
