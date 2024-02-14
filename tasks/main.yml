@@ -59,89 +59,6 @@
             state: present
             kubeconfig: /etc/kubernetes/admin.conf
             src: https://raw.githubusercontent.com/projectcalico/calico/{{ version_calico }}/manifests/calico.yaml
-      
-    - name: J'installe Longhorn
-      when: deploy_longhorn is true
-      block:
-        - name: Je regarde si le module iscsi_tcp est bien chargé
-          community.general.modprobe:
-            name: "iscsi_tcp"
-            state: present
-
-        - name: J'installe le nfsv4 client
-          ansible.builtin.apt:
-            name: nfs-common
-            state: present
-
-        - name: Je copie la conf longhorn sur l'hote
-          ansible.builtin.copy:
-            src: "{{ role_path }}/files/longhorn.yaml"
-            dest: /srv/longhorn-cluster.yaml
-            mode: "660"
-
-        - name: Je lance le déploiement de longhorn
-          kubernetes.core.k8s:
-            state: present
-            kubeconfig: /etc/kubernetes/admin.conf
-            src: /srv/longhorn-cluster.yaml
-
-    - name: J'installe OpenEBS
-      when: deploy_openebs is true
-      block:
-        - name: J'install open-iscsi
-          ansible.builtin.apt:
-            name: open-iscsi
-            state: present
-            update_cache: yes
-        
-        - name: J'active le service iscsid
-          ansible.builtin.systemd_service:
-            name: iscsid
-            enabled: true
-            state: started
-
-        - name: Je lance le déploiement de openebs
-          kubernetes.core.k8s:
-            state: present
-            kubeconfig: /etc/kubernetes/admin.conf
-            src: https://openebs.github.io/charts/openebs-operator.yaml
-            wait: true
-
-        - name: Je lance le déploiement de openebs cstor operator
-          kubernetes.core.k8s:
-            state: present
-            kubeconfig: /etc/kubernetes/admin.conf
-            src: https://openebs.github.io/charts/cstor-operator.yaml
-            wait: true
-
-        - name: J'installe le paquet jq
-          ansible.builtin.apt:
-            name: jq
-            update_cache: true
-            state: present
-
-        - name: Je récupère les blocs devices
-          ansible.builtin.shell:
-            cmd: "kubectl get bd -n openebs --kubeconfig=/etc/kubernetes/admin.conf -o=json | jq -c '.items[] | select(.spec.capacity.storage == {{ oebssizestordisk }}) | {bd: .metadata.name, node: .metadata.labels.nodename}'"
-          register: bloc_devices
-          when: oebssizestordisk is defined
-          failed_when: oebssizestordisk is not defined
-
-        - name: Je mets les bds dans une var 
-          ansible.builtin.set_fact:
-            bdebs: "{{ bloc_devices.stdout_lines | map('regex_replace', '\\\\', '') | list }}"
-
-        - name: Je copie mon template pour le cstorpoolcluster
-          ansible.builtin.template:
-            src: "{{ role_path }}/templates/cspc.j2"
-            dest: /srv/cspc.yaml
-            mode: "660"
-
-        - name: Je lance le déploiement de openebs cstorpoolcluster
-          kubernetes.core.k8s:
-            state: present
-            kubeconfig: /etc/kubernetes/admin.conf
-            src: /srv/cspc.yaml
 
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
@@ -185,6 +102,98 @@
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
         src: /srv/metallb-pool.yaml
+
+- name: J'installe OpenEBS
+  delegate_to: "{{ play_hosts | first }}"
+  run_once: true
+  when: deploy_openebs is true
+  block:
+    - name: J'install open-iscsi
+      ansible.builtin.apt:
+        name: open-iscsi
+        state: present
+        update_cache: yes
+    
+    - name: J'active le service iscsid
+      ansible.builtin.systemd_service:
+        name: iscsid
+        enabled: true
+        state: started
+
+    - name: Je lance le déploiement de openebs cstor operator
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: https://openebs.github.io/charts/cstor-operator.yaml
+        wait: true
+
+    - name: J'installe le paquet jq
+      ansible.builtin.apt:
+        name: jq
+        update_cache: true
+        state: present
+
+    - name: Je récupère les blocs devices
+      ansible.builtin.shell:
+        cmd: "kubectl get bd -n openebs --kubeconfig=/etc/kubernetes/admin.conf -o=json | jq -c '.items[] | select(.spec.capacity.storage == {{ oebssizestordisk }}) | {bd: .metadata.name, node: .metadata.labels.nodename}'"
+      register: bloc_devices
+      when: oebssizestordisk is defined
+      failed_when: oebssizestordisk is not defined
+
+    - name: Je mets les bds dans une var 
+      ansible.builtin.set_fact:
+        bdebs: "{{ bloc_devices.stdout_lines | map('regex_replace', '\\\\', '') | list }}"
+
+    - name: Je copie mon template pour le cstorpoolcluster
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/cspc.j2"
+        dest: /srv/cspc.yaml
+        mode: "660"
+
+    - name: Je lance le déploiement de openebs cstorpoolcluster
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: /srv/cspc.yaml
+
+    - name: Je copie mon template pour le cstor-csi-disk
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/cstor-csi-disk.j2"
+        dest: /srv/cstor-csi-disk.yaml
+        mode: "660"
+
+    - name: Je lance le déploiement de openebs cstorpoolcluster
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: /srv/cstor-csi-disk.j2.yaml
+
+- name: J'installe Longhorn
+  delegate_to: "{{ play_hosts | first }}"
+  run_once: true
+  when: deploy_longhorn is true
+  block:
+    - name: Je regarde si le module iscsi_tcp est bien chargé
+      community.general.modprobe:
+        name: "iscsi_tcp"
+        state: present
+
+    - name: J'installe le nfsv4 client
+      ansible.builtin.apt:
+        name: nfs-common
+        state: present
+
+    - name: Je copie la conf longhorn sur l'hote
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/longhorn.yaml"
+        dest: /srv/longhorn-cluster.yaml
+        mode: "660"
+
+    - name: Je lance le déploiement de longhorn
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: /srv/longhorn-cluster.yaml
 
 - name: J'installe helm
   delegate_to: "{{ play_hosts | first }}"
