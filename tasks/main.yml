@@ -126,6 +126,8 @@
         kubeconfig: /etc/kubernetes/admin.conf
         src: https://openebs.github.io/charts/cstor-operator.yaml
         wait: true
+        wait_timeout: 480
+        wait_sleep: 20
 
     - name: J'installe le paquet jq
       ansible.builtin.apt:
@@ -143,6 +145,10 @@
     - name: Je mets les bds dans une var 
       ansible.builtin.set_fact:
         bdebs: "{{ bloc_devices.stdout_lines | map('regex_replace', '\\\\', '') | list }}"
+    
+    - name: Je debug bdebs
+      ansible.builtin.debug:
+        msg: "{{ bdebs }}"
 
     - name: Je copie mon template pour le cstorpoolcluster
       ansible.builtin.template:
