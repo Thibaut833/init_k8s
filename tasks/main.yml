@@ -52,8 +52,8 @@
           register: key_chiff
 
         - name: Je crée le dossier enc dans /etc/kubernetes/
-          ansible.builtin.lineinfile:
-            path: /etc/kubernetes/
+          ansible.builtin.file:
+            path: /etc/kubernetes/enc
             state: directory
             recurse: true
             owner: root
