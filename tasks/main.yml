@@ -119,16 +119,6 @@
             port: 6443
             delay: 10
 
-        - name: Je check le pod kube-apiserver
-          kubernetes.core.k8s:
-            state: present
-            kubeconfig: /etc/kubernetes/admin.conf
-            kind: Pod
-            namespace: kube-system
-            name: kube-apiserver
-            wait_sleep: 10
-            wait_timeout: 600
-
     - name: J'installe Flannel
       kubernetes.core.k8s:
         state: present
