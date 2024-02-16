@@ -44,6 +44,84 @@
         - check_k8s.status != 200
         - check_k8s.json is not defined or check_k8s.json != "ok"
 
+    - name: Je chiffre la base etcd
+      block:
+        - name: Je crée la clé de chiffrement pour etcd
+          ansible.builtin.shell:
+            cmd: "head -c 32 /dev/urandom | base64"
+          register: key_chiff
+
+        - name: Je crée le dossier enc dans /etc/kubernetes/
+          ansible.builtin.lineinfile:
+            path: /etc/kubernetes/
+            state: directory
+            recurse: true
+            owner: root
+            group: root
+
+        - name: Je copie le template encryptionConfig dans le dossier
+          ansible.builtin.template:
+            src: "{{ role_path }}/templates/encryptionConfig.j2"
+            dest: /etc/kubernetes/enc/encryptionConfig.yaml
+            mode: "770"
+
+        - name: Je lis la configuration de kube-apiserver
+          ansible.builtin.slurp:
+            src: /etc/kubernetes/manifests/kube-apiserver.yaml
+          register: conf_kubeapiserv  
+
+        - name: Je mets la conf dans une var
+          ansible.builtin.set_fact:
+            conf_kubeapiserv_work: "{{ conf_kubeapiserv['content'] | b64decode | from_yaml }}"
+
+        - name: J'ajoute l'arg encryption sur la commande kube-apiserver
+          ansible.builtin.set_fact:
+            newcommandekubeapi: "{{ conf_kubeapiserv_work.spec.containers[0].command + ['--encryption-provider-config=/etc/kubernetes/enc/encryptionConfig.yaml']}}"
+
+        - name: Je remplace la liste de commande pour kube-apiserver avec la nouvelle
+          ansible.builtin.set_fact:
+            conf_kubeapiserv_work: "{{ conf_kubeapiserv_work | replace(conf_kubeapiserv_work.spec.containers[0].command, newcommandekubeapi) }}"
+
+        - name: J'ajoute le volumeMount enc
+          ansible.builtin.set_fact:
+            newvmlist: "{{ conf_kubeapiserv_work.spec.containers[0].volumeMounts + vm_enc }}"
+          vars:
+            vm_enc:
+              - name: enc
+                mountPath: /etc/kubernetes/enc
+                readOnly: true
+
+        - name: Je remplace la liste de volumeMount par la nouvelle
+          ansible.builtin.set_fact:
+            conf_kubeapiserv_work: "{{ conf_kubeapiserv_work | replace(conf_kubeapiserv_work.spec.containers[0].volumeMounts, newvmlist) }}"
+
+        - name: J'ajoute le volume enc
+          set_fact:
+            newvlist: "{{ conf_kubeapiserv_work.spec.volumes + v_enc }}"
+          vars:
+            v_enc:
+              - name: enc
+                hostPath:
+                  path: /etc/kubernetes/enc
+                  type: DirectoryOrCreate
+
+        - name: Je remplace la liste de volumes par la nouvelle
+          set_fact:
+            conf_kubeapiserv_work: "{{ conf_kubeapiserv_work | replace(conf_kubeapiserv_work.spec.volumes, newvlist) }}"
+      
+        - name: Je mets à jour mon manifests pod static kube-apiserver
+          ansible.builtin.copy:
+            content: "{{ conf_kubeapiserv_work | to_yaml  }}"
+            dest: /etc/kubernetes/manifests/kube-apiserver.yaml
+
+        - name: Je restart le kube-apiserver
+          kubernetes.core.k8s:
+            state: absent
+            kubeconfig: /etc/kubernetes/admin.conf
+            kind: Pod
+            namespace: kube-system
+            name: kube-apiserver
+
     - name: J'installe Flannel
       kubernetes.core.k8s:
         state: present
