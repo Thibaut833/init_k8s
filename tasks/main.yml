@@ -114,13 +114,23 @@
             content: "{{ conf_kubeapiserv_work | to_yaml  }}"
             dest: /etc/kubernetes/manifests/kube-apiserver.yaml
 
-        - name: Je restart le kube-apiserver
+        - name: Je supprime le pod kube-apiserver
           kubernetes.core.k8s:
             state: absent
             kubeconfig: /etc/kubernetes/admin.conf
             kind: Pod
             namespace: kube-system
             name: kube-apiserver
+
+        - name: Je check le pod kube-apiserver
+          kubernetes.core.k8s:
+            state: present
+            kubeconfig: /etc/kubernetes/admin.conf
+            kind: Pod
+            namespace: kube-system
+            name: kube-apiserver
+            wait_sleep: 10
+            wait_timeout: 600
 
     - name: J'installe Flannel
       kubernetes.core.k8s:
