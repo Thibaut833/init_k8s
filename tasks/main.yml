@@ -44,21 +44,20 @@
         - check_k8s.status != 200
         - check_k8s.json is not defined or check_k8s.json != "ok"
 
-    - name: Je chiffre la base etcd
-      block:
-        - name: Je regarde si le fichier encryptionConfig.yaml existe
-          ansible.builtin.stat:
-            path: "/etc/kubernetes/enc/encryptionConfig.yaml"
-          register: exists_encryptionconfig
+    - name: Je regarde si le fichier encryptionConfig.yaml existe
+      ansible.builtin.stat:
+        path: "/etc/kubernetes/enc/encryptionConfig.yaml"
+      register: exists_encryptionconfig
 
+    - name: Je chiffre la base etcd
+      when: not exists_encryptionconfig.stat.exists
+      block:
         - name: Je crée la clé de chiffrement pour etcd
-          when: not exists_encryptionconfig.stat.exists
           ansible.builtin.shell:
             cmd: "head -c 32 /dev/urandom | base64"
           register: key_chiff          
 
         - name: Je crée le dossier enc dans /etc/kubernetes/
-          when: not exists_encryptionconfig.stat.exists
           ansible.builtin.file:
             path: /etc/kubernetes/enc
             state: directory
@@ -67,7 +66,6 @@
             group: root
 
         - name: Je copie le template encryptionConfig dans le dossier
-          when: not exists_encryptionconfig.stat.exists
           ansible.builtin.template:
             src: "{{ role_path }}/templates/encryptionConfig.j2"
             dest: /etc/kubernetes/enc/encryptionConfig.yaml
