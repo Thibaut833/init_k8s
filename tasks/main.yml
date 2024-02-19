@@ -123,7 +123,8 @@
         - name: Je vérifie la connexion à l'api
           ansible.builtin.wait_for: 
             port: 6443
-            delay: 10
+            delay: 20
+            sleep: 5
 
     - name: J'installe Flannel
       kubernetes.core.k8s:
