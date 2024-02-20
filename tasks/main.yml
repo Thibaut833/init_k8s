@@ -149,10 +149,6 @@
       ansible.builtin.set_fact:
         num_nodes: "{{ num_nodes_raw.stdout | int }}" 
 
-    - name: Debug num_nodes
-      debug:
-        msg: "{{ num_nodes }}{{ num_nodes_raw }}" 
-
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
     cmd: "{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}"
@@ -162,8 +158,8 @@
   run_once: true
   loop: "{{ play_hosts[1:] }}"
   when:
-    - check_k8s.status != 200
-    - check_k8s.json is not defined or check_k8s.json != "ok"
+    - hostvars[groups['kub'][0]]['check_k8s.status'] != 200
+    - hostvars[groups['kub'][0]]['check_k8s.json'] is not defined or hostvars[groups['kub'][0]]['check_k8s.json'] != "ok"
     - hostvars[groups['kub'][0]]['num_nodes'] <= 1
 
 - name: J'installe Metallb
