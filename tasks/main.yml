@@ -160,7 +160,7 @@
   when:
     - check_k8s.status != 200
     - check_k8s.json is not defined or check_k8s.json != "ok"
-    - hostvars[groups['kub'][0]]['kubeadm_join'] > 1
+    - hostvars[groups['kub'][0]]['num_nodes'] > 1
 
 - name: J'installe Metallb
   delegate_to: "{{ play_hosts | first }}"
