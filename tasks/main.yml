@@ -142,12 +142,16 @@
             src: https://raw.githubusercontent.com/projectcalico/calico/{{ version_calico }}/manifests/calico.yaml
 
     - name: Je lance la commande pour récupérer le nombre de nodes
-      shell: kubectl get nodes --no-headers | wc -l
+      ansible.builtin.shell: kubectl get nodes --no-headers | wc -l
       register: num_nodes_raw
 
     - name: J'extrait le nombre de nodes
-      set_fact:
+      ansible.builtin.set_fact:
         num_nodes: "{{ num_nodes_raw.stdout | int }}" 
+
+    - name: Debug num_nodes
+      debug:
+        msg: "{{ num_nodes }}" 
 
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
