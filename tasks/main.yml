@@ -151,7 +151,7 @@
   when:
     - check_k8s.status != 200
     - check_k8s.json is not defined or check_k8s.json != "ok"
-    - inventory_hostname in groups['kub-worker']
+    - inventory_hostname in groups['kubworker']
 
 - name: J'installe Metallb
   delegate_to: "{{ play_hosts | first }}"
