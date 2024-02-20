@@ -44,6 +44,26 @@
         - check_k8s.status != 200
         - check_k8s.json is not defined or check_k8s.json != "ok"
 
+    - name: Je crée la commande pour rejoindre le controlplane dans un fichier
+      ansible.builtin.copy:
+        content: "{{ kubeadm_join }}"
+        dest: /srv/kubeadm_join.txt
+        mode: "0660"
+        owner: "root"
+        group: "root"
+      when:
+        - check_k8s.status != 200
+        - check_k8s.json is not defined or check_k8s.json != "ok"
+
+    - name: Je recupère le contenu du fichier kubeadm_join.txt
+      ansible.builtin.slurp:
+        src: /srv/kubeadm_join.txt
+      register: kubeadm_join_slurp
+      when:
+        - kubeadm_join is not defined
+        - check_k8s.status != 200
+        - check_k8s.json is not defined or check_k8s.json != "ok"
+
     - name: Je regarde si le fichier encryptionConfig.yaml existe
       ansible.builtin.stat:
         path: "/etc/kubernetes/enc/encryptionConfig.yaml"
@@ -156,7 +176,7 @@
 
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
-    cmd: "{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}"
+    cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp'] }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
   register: workers_join_cluster
   changed_when: workers_join_cluster.rc == 0
   delegate_to: "{{ item }}"
