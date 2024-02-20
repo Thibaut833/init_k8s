@@ -153,7 +153,7 @@
   debug:
     msg: "{{ check_k8stoworker }}"
   vars:
-    check_k8stoworker: hostvars[groups['kub'][0]]['check_k8s.status']
+    check_k8stoworker: hostvars[groups['kub'][0]]['check_k8s']['status']
 
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
