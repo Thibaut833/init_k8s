@@ -159,7 +159,6 @@
   loop: "{{ play_hosts[1:] }}"
   when:
     - hostvars[groups['kub'][0]]['check_k8s']['status'] != 200
-    - hostvars[groups['kub'][0]]['check_k8s']['msg'] is not defined or hostvars[groups['kub'][0]]['check_k8s']['msg'] != "OK (2 bytes)"
     - hostvars[groups['kub'][0]]['num_nodes'] <= 1
 
 - name: J'installe Metallb
