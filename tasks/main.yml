@@ -151,7 +151,7 @@
 
     - name: Debug num_nodes
       debug:
-        msg: "{{ num_nodes }}" 
+        msg: "{{ num_nodes }}{{ num_nodes_raw }}" 
 
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
@@ -164,7 +164,7 @@
   when:
     - check_k8s.status != 200
     - check_k8s.json is not defined or check_k8s.json != "ok"
-    - hostvars[groups['kub'][0]]['num_nodes'] > 1
+    - hostvars[groups['kub'][0]]['num_nodes'] <= 1
 
 - name: J'installe Metallb
   delegate_to: "{{ play_hosts | first }}"
