@@ -158,9 +158,11 @@
   run_once: true
   loop: "{{ play_hosts[1:] }}"
   when:
-    - hostvars[groups['kub'][0]]['check_k8s.status'] != 200
-    - hostvars[groups['kub'][0]]['check_k8s.json'] is not defined or hostvars[groups['kub'][0]]['check_k8s.json'] != "ok"
+    - check_k8stoworker.status != 200
+    - check_k8stoworker.json is not defined or check_k8stowork.json != "ok"
     - hostvars[groups['kub'][0]]['num_nodes'] <= 1
+  vars:
+    check_k8stoworker: hostvars[groups['kub'][0]]['check_k8s']
 
 - name: J'installe Metallb
   delegate_to: "{{ play_hosts | first }}"
