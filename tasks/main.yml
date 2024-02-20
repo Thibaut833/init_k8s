@@ -149,7 +149,7 @@
   changed_when: workers_join_cluster.rc == 0
   delegate_to: "kub{{ item }}"
   run_once: true
-  loop: "{{ groups['kubworker'] | length }}"
+  loop: "{{ range(1, groups['kubworker'] | length + 1) | list }}"
   when:
     - check_k8s.status != 200
     - check_k8s.json is not defined or check_k8s.json != "ok"
