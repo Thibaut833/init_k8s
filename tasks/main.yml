@@ -169,11 +169,6 @@
       ansible.builtin.set_fact:
         num_nodes: "{{ num_nodes_raw.stdout | int }}" 
 
-- name: debug num_nodes 
-  debug:
-    var: hostvars[groups['kub'][0]]['num_nodes']
-
-
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
     cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp'] }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
@@ -183,7 +178,7 @@
   run_once: true
   loop: "{{ play_hosts[1:] }}"
   when:
-    - hostvars[groups['kub'][0]]['check_k8s']['status'] != "200"
+    - hostvars[groups['kub'][0]]['check_k8s']['status'] != 200
     - hostvars[groups['kub'][0]]['num_nodes'] != 1
 
 - name: J'installe Metallb
