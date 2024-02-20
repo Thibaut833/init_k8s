@@ -141,6 +141,14 @@
             kubeconfig: /etc/kubernetes/admin.conf
             src: https://raw.githubusercontent.com/projectcalico/calico/{{ version_calico }}/manifests/calico.yaml
 
+    - name: Je lance la commande pour récupérer le nombre de nodes
+      shell: kubectl get nodes --no-headers | wc -l
+      register: num_nodes_raw
+
+    - name: J'extrait le nombre de nodes
+      set_fact:
+        num_nodes: "{{ num_nodes_raw.stdout | int }}" 
+
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
     cmd: "{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}"
@@ -152,6 +160,7 @@
   when:
     - check_k8s.status != 200
     - check_k8s.json is not defined or check_k8s.json != "ok"
+    - hostvars[groups['kub'][0]]['kubeadm_join'] > 1
 
 - name: J'installe Metallb
   delegate_to: "{{ play_hosts | first }}"
