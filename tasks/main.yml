@@ -147,11 +147,12 @@
     cmd: "{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}"
   register: workers_join_cluster
   changed_when: workers_join_cluster.rc == 0
+  delegate_to: "kub{{ item }}"
   run_once: true
+  loop: "{{ groups['kubworker'] | length }}"
   when:
     - check_k8s.status != 200
     - check_k8s.json is not defined or check_k8s.json != "ok"
-    - inventory_hostname in groups['kubworker']
 
 - name: J'installe Metallb
   delegate_to: "{{ play_hosts | first }}"
