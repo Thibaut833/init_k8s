@@ -8,12 +8,6 @@ Requirements
 
 Machine debian ou ubuntu, récente.
 
-Role Variables
---------------
-
-- deploy_traefik: utilisation du ingress traefik, set à false 
-- deploy_nginx: utilisation du ingress nginx, set à true 
-
 Dependencies
 ------------
 
