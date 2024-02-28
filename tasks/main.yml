@@ -153,6 +153,14 @@
             kubeconfig: /etc/kubernetes/admin.conf
             src: https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/calico.yaml
 
+    - name: Je lance la commande pour récupérer le nombre de nodes
+      ansible.builtin.shell: kubectl get --kubeconfig=/etc/kubernetes/admin.conf nodes --no-headers | wc -l
+      register: num_nodes_raw
+
+    - name: J'extrait le nombre de nodes
+      ansible.builtin.set_fact:
+        num_nodes: "{{ num_nodes_raw.stdout | int }}"
+
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
     cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp'] }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
