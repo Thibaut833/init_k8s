@@ -172,3 +172,70 @@
   when:
     - hostvars[groups['kub'][0]]['check_k8s']['status'] != 200
     - hostvars[groups['kub'][0]]['num_nodes'] != 1
+
+- name: J'installe OpenEBS
+  delegate_to: "{{ play_hosts | first }}"
+  run_once: true
+  when: deploy_openebs is true
+  block:
+    - name: J'install open-iscsi
+      ansible.builtin.apt:
+        name: open-iscsi
+        state: present
+        update_cache: yes
+    
+    - name: J'active le service iscsid
+      ansible.builtin.systemd_service:
+        name: iscsid
+        enabled: true
+        state: started
+
+    - name: Je lance le déploiement de openebs cstor operator
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: https://openebs.github.io/charts/cstor-operator.yaml
+        wait: true
+        wait_timeout: 480
+        wait_sleep: 20
+
+    - name: J'installe le paquet jq
+      ansible.builtin.apt:
+        name: jq
+        update_cache: true
+        state: present
+
+    - name: Je récupère les blocs devices
+      ansible.builtin.shell:
+        cmd: "kubectl get bd -n openebs --kubeconfig=/etc/kubernetes/admin.conf -o=json | jq -c '.items[] | select(.spec.capacity.storage == {{ oebssizestordisk }}) | {bd: .metadata.name, node: .metadata.labels.nodename}'"
+      register: bloc_devices
+      when: oebssizestordisk is defined
+      failed_when: oebssizestordisk is not defined
+
+    - name: Je mets les bds dans une var nommée bdebs
+      ansible.builtin.set_fact:
+        bdebs: "{{ bloc_devices.stdout_lines | map('regex_replace', '\\\\', '') | list }}"
+
+    - name: Je copie mon template pour le cstorpoolcluster
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/cspc.j2"
+        dest: /srv/cspc.yaml
+        mode: "660"
+
+    - name: Je lance le déploiement de openebs cstorpoolcluster
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: /srv/cspc.yaml
+
+    - name: Je copie mon template pour le cstor-csi-disk
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/cstor-csi-disk.j2"
+        dest: /srv/cstor-csi-disk.yaml
+        mode: "660"
+
+    - name: Je lance le déploiement de openebs cstorpoolcluster
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: /srv/cstor-csi-disk.yaml
