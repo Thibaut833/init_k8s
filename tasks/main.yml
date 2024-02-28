@@ -176,7 +176,6 @@
 - name: J'installe OpenEBS
   delegate_to: "{{ play_hosts | first }}"
   run_once: true
-  when: deploy_openebs is true
   block:
     - name: J'install open-iscsi
       ansible.builtin.apt:
