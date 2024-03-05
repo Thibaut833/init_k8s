@@ -146,13 +146,12 @@
             delay: 30
 
         - name: Je vérifie que kubectl fonctionne
-          ansible.builtin.shell: $([[ $(kubectl get node $(cat /etc/hostname) --kubeconfig=/etc/kubernetes/admin.conf -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}') == "True" ]])
-          args:
-            executable: /bin/bash
-          register: kubelet_ready
-          until: kubelet_ready.rc == 0
-          retries: 60
-          delay: 3
+          ansible.builtin.shell: kubectl get nodes --kubeconfig=/etc/kubernetes/admin.conf
+          register: check_kubectl
+          until:      
+            - '" Ready "  in check_kubectl.stdout'      
+          retries: 6
+          delay: 2
 
     - name: J'installe Calico
       block:
