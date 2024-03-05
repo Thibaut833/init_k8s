@@ -180,7 +180,7 @@
   delegate_to: "{{ item }}"
   run_once: true
   loop: "{{ play_hosts[1:] }}"
-  when: ansible_facts.services['kubelet'] is not defined
+  when: ansible_facts.services.kubelet is not defined
 
 - name: J'installe OpenEBS
   delegate_to: "{{ play_hosts | first }}"
