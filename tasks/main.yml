@@ -181,6 +181,9 @@
     - hostvars[groups['kub'][0]]['check_k8s']['status'] != 200
     - hostvars[groups['kub'][0]]['num_nodes'] != 1
 
+- debug:
+    msg: "{{ hostvars[groups['kub'][0]]['num_nodes'] }}"
+
 - name: J'installe OpenEBS
   delegate_to: "{{ play_hosts | first }}"
   run_once: true
