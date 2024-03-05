@@ -146,7 +146,7 @@
             delay: 30
 
         - name: Je vérifie que kubectl fonctionne
-          ansible.builtin.shell: $([[ $(kubectl get node $(cat /etc/hostname) -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}') == "True" ]])
+          ansible.builtin.shell: $([[ $(kubectl get node $(cat /etc/hostname) --kubeconfig=/etc/kubernetes/admin.conf -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}') == "True" ]])
           args:
             executable: /bin/bash
           register: kubelet_ready
