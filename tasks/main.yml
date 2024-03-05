@@ -169,14 +169,6 @@
       ansible.builtin.set_fact:
         num_nodes: "{{ num_nodes_raw.stdout | int }}"
 
-- name: Je récupère le service kubelet des noeuds
-  ansible.builtin.systemd:
-    name: kubelet
-  register: kubelet_state
-
-- debug:
-    msg: "{{ kubelet_state }}"
-  
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
     cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp'] }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
@@ -185,7 +177,7 @@
   delegate_to: "{{ item }}"
   run_once: true
   loop: "{{ play_hosts[1:] }}"
-  when: ansible_facts.services is not defined
+  ignore_errors: true
 
 - name: J'installe OpenEBS
   delegate_to: "{{ play_hosts | first }}"
