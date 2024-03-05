@@ -145,7 +145,7 @@
           ansible.builtin.shell: kubectl get nodes --kubeconfig=/etc/kubernetes/admin.conf
           register: check_kubectl
           until:      
-            - '" Ready "  in check_kubectl.stdout'      
+            - check_kubectl.rc  == 0      
           retries: 30
           delay: 10
 
