@@ -183,7 +183,8 @@
   when:
     - ansible_facts.services['kubelet']['state'] == "failed" or 
       ansible_facts.services['kubelet']['state'] == "stopped" or
-      ansible_facts.services['kubelet']['state'] == "unknown"
+      ansible_facts.services['kubelet']['state'] == "unknown" or 
+      ansible_facts.services['kubelet'] is not defined
 
 - name: J'installe OpenEBS
   delegate_to: "{{ play_hosts | first }}"
