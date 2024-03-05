@@ -169,6 +169,9 @@
       ansible.builtin.set_fact:
         num_nodes: "{{ num_nodes_raw.stdout | int }}"
 
+- name: Je récupère les services des noeuds
+  ansible.builtin.service_facts:
+  
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
     cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp'] }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
@@ -178,8 +181,9 @@
   run_once: true
   loop: "{{ play_hosts[1:] }}"
   when:
-    - hostvars[groups['kub'][0]]['check_k8s']['status'] | int  != 200
-    - hostvars[groups['kub'][0]]['num_nodes'] | int != 1
+    - ansible_facts.services['kubelet']['state'] == "failed" or 
+      ansible_facts.services['kubelet']['state'] == "stopped" or
+      ansible_facts.services['kubelet']['state'] == "unknown"
 
 - name: J'installe OpenEBS
   delegate_to: "{{ play_hosts | first }}"
