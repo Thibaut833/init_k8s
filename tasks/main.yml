@@ -150,8 +150,8 @@
           register: check_kubectl
           until:      
             - '" Ready "  in check_kubectl.stdout'      
-          retries: 6
-          delay: 2
+          retries: 30
+          delay: 10
 
     - name: J'installe Calico
       block:
