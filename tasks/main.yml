@@ -181,10 +181,10 @@
   run_once: true
   loop: "{{ play_hosts[1:] }}"
   when:
+    - ansible_facts.services['kubelet'] is not defined
     - ansible_facts.services['kubelet']['state'] == "failed" or 
       ansible_facts.services['kubelet']['state'] == "stopped" or
-      ansible_facts.services['kubelet']['state'] == "unknown" or 
-      ansible_facts.services['kubelet'] is not defined
+      ansible_facts.services['kubelet']['state'] == "unknown"
 
 - name: J'installe OpenEBS
   delegate_to: "{{ play_hosts | first }}"
