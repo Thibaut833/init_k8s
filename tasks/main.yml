@@ -261,4 +261,4 @@
 
     - name: Je check fluxcd
       ansible.builtin.shell:
-        cmd: "flux check --pre"
+        cmd: "flux check --pre --kubeconfig=/etc/kubernetes/admin.conf"
