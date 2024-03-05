@@ -167,7 +167,7 @@
 
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
-    cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp'] }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
+    cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp']['content'] | b64decode }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
   register: workers_join_cluster
   changed_when: workers_join_cluster.rc == 0
   delegate_to: "{{ item }}"
