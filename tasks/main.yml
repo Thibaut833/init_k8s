@@ -241,3 +241,24 @@
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
         src: /srv/cstor-csi-disk.yaml
+
+- name: J'installe fluxcd
+  delegate_to: "{{ play_hosts | first }}"
+  run_once: true
+  block:
+    - name: Je télécharge l'achive fluxcd
+      ansible.builtin.get_url:
+        url: https://github.com/fluxcd/flux2/releases/download/v2.2.3/flux_2.2.3_linux_amd64.tar.gz
+        dest: /tmp/flux.tar.gz
+        mode: '0770'
+
+    - name: Je décompresse l'archive
+      ansible.builtin.unarchive:
+        src: /tmp/flux.tar.gz
+        dest: /usr/local/bin
+        mode: "0710"
+        remote_src: true
+
+    - name: Je check fluxcd
+      ansible.builtin.shell:
+        cmd: "flux check --pre"
