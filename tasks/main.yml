@@ -59,10 +59,6 @@
       ansible.builtin.slurp:
         src: /srv/kubeadm_join.txt
       register: kubeadm_join_slurp
-      when:
-        - kubeadm_join is not defined
-        - check_k8s.status != 200
-        - check_k8s.json is not defined or check_k8s.json != "ok"
 
     - name: Je regarde si le fichier encryptionConfig.yaml existe
       ansible.builtin.stat:
