@@ -326,7 +326,7 @@
 
     - name: J'affiche le résultat de fluxcd pre check
       ansible.builtin.debug:
-        msg: "{{ fluxprechek.stdout_lines }}"
+        msg: "{{ fluxprecheck.stdout_lines }}"
 
     - name: Flux bootstrap github
       when: 
