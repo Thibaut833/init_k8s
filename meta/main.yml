@@ -7,4 +7,4 @@ galaxy_info:
   min_ansible_version: "2.1"
 
 dependencies:
-  - Thibaut833/conf_k8s
+  - role: conf_k8s
