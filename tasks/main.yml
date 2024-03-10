@@ -339,6 +339,6 @@
             --owner=Thibaut833
             --repository=infra
             --branch=main
-            --path= k8s/fluxcd
+            --path=k8s
             --kubeconfig=/etc/kubernetes/admin.conf
             --personal
