@@ -326,7 +326,7 @@
 
     - name: J'affiche le résultat de fluxcd pre check
       ansible.builtin.debug:
-        msg: "{{ fluxprecheck.stdout_lines }}"
+        var: fluxprecheck
 
     - name: Flux bootstrap github
       when: 
@@ -340,5 +340,6 @@
             --repository=infra \
             --branch=main \
             --path= k8s/fluxcd \
-            --token="{{ githubtoken }}" 
+            --token="{{ githubtoken }}" \
+            --kubeconfig=/etc/kubernetes/admin.conf \ 
             --personal
