@@ -289,8 +289,8 @@
           labels:
             sealedsecrets.bitnami.com/sealed-secrets-key: active
           data:
-            tls.crt: "{{ kubesealkeypub | b64decode}}"
-            tls.key: "{{ kubesealkey | b64decode}}"
+            tls.crt: "{{ kubesealkeypub | b64encode}}"
+            tls.key: "{{ kubesealkey | b64encode}}"
 
     - name: Je supprime le controleur sealed secret pour qu'il se rebuild avec les clés kubeseal
       kubernetes.core.k8s:
