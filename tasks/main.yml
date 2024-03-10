@@ -334,12 +334,11 @@
         - githubtoken is defined
       ansible.builtin.shell:
         cmd: |
-         flux bootstrap github
+         echo {{ githubtoken }} | flux bootstrap github
             --token-auth
             --owner=Thibaut833
             --repository=infra
             --branch=main
             --path= k8s/fluxcd
-            --token="{{ githubtoken }}"
             --kubeconfig=/etc/kubernetes/admin.conf
             --personal
