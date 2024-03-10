@@ -296,7 +296,7 @@
       kubernetes.core.k8s:
         state: absent
         kubeconfig: /etc/kubernetes/admin.conf
-        apiVersion: v1
+        api_version: v1
         kind: Pod
         namespace: kube-system
         label_selectors:
