@@ -242,6 +242,66 @@
         kubeconfig: /etc/kubernetes/admin.conf
         src: /srv/cstor-csi-disk.yaml
 
+- name: J'installe secrets sealed controller
+  delegate_to: "{{ play_hosts | first }}"
+  run_once: true  
+  block:
+    - name: J'installe le controleur
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.0/controller.yaml
+
+    - name: J'installe l'outil kubeseal
+      ansible.builtin.get_url:
+        url: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.0/kubeseal-0.26.0-linux-amd64.tar.gz
+        dest: /tmp/kubeseal.tar.gz
+        mode: '0770'
+
+    - name: Je décompresse l'archive
+      ansible.builtin.unarchive:
+        src: /tmp/kubeseal.tar.gz
+        dest: /usr/local/bin
+        mode: "0710"
+        remote_src: true
+
+    - name: Je déploie ma clé privée kubeseal
+      ansible.builtin.copy:
+        dest: /srv/kubesealkey
+        content: "{{ kubesealkey }}"
+
+    - name: Je déploie ma clé publique kubeseal
+      ansible.builtin.copy:
+        dest: /srv/kubesealkey.pub
+        content: "{{ kubesealkeypub }}"
+
+    - name: Je crée le secret contenant les clés kubeseal
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: kubernetes.io/tls
+          metadata:
+            name: kubesealkeys
+            namespace: kube-system
+          labels:
+            sealedsecrets.bitnami.com/sealed-secrets-key: active
+          data:
+            tls.crt: "{{ kubesealkeypub | b64decode}}"
+            tls.key: "{{ kubesealkey | b64decode}}"
+
+    - name: Je supprime le controleur sealed secret pour qu'il se rebuild avec les clés kubeseal
+      kubernetes.core.k8s:
+        state: absent
+        kubeconfig: /etc/kubernetes/admin.conf
+        apiVersion: v1
+        kind: Pod
+        namespace: kube-system
+        label_selectors:
+          - "name=sealed-secrets-controller"
+
 - name: J'installe fluxcd
   delegate_to: "{{ play_hosts | first }}"
   run_once: true
@@ -262,3 +322,23 @@
     - name: Je check fluxcd
       ansible.builtin.shell:
         cmd: "flux check --pre --kubeconfig=/etc/kubernetes/admin.conf"
+      register: fluxprecheck
+
+    - name: J'affiche le résultat de fluxcd pre check
+      ansible.builtin.debug:
+        msg: "{{ fluxprechek.stdout_lines }}"
+
+    - name: Flux bootstrap github
+      when: 
+        - fluxprecheck.rc == 0
+        - githubtoken is defined
+      ansible.builtin.shell:
+        cmd: |
+         flux bootstrap github \
+            --token-auth \
+            --owner=Thibaut833\
+            --repository=infra \
+            --branch=main \
+            --path= k8s/fluxcd \
+            --token="{{ githubtoken }}" 
+            --personal
