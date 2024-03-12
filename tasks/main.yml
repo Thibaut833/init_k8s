@@ -268,12 +268,12 @@
     - name: Je déploie ma clé privée kubeseal
       ansible.builtin.copy:
         dest: /srv/kubesealkey
-        content: "{{ kubesealkey }}"
+        content: "{{ kubesealkey | b64decode }}"
 
     - name: Je déploie ma clé publique kubeseal
       ansible.builtin.copy:
         dest: /srv/kubesealkey.pub
-        content: "{{ kubesealkeypub }}"
+        content: "{{ kubesealkeypub | b64decode }}"
 
     - name: Je crée le secret contenant les clés kubeseal
       kubernetes.core.k8s:
