@@ -268,12 +268,12 @@
     - name: Je déploie ma clé privée kubeseal
       ansible.builtin.copy:
         dest: /srv/kubesealkey
-        content: "{{ kubesealkey }}"
+        content: "{{ kubesealkey | b64decode }}"
 
     - name: Je déploie ma clé publique kubeseal
       ansible.builtin.copy:
         dest: /srv/kubesealkey.pub
-        content: "{{ kubesealkeypub }}"
+        content: "{{ kubesealkeypub | b64decode }}"
 
     - name: Je crée le secret contenant les clés kubeseal
       kubernetes.core.k8s:
@@ -289,8 +289,8 @@
           labels:
             sealedsecrets.bitnami.com/sealed-secrets-key: active
           data:
-            tls.crt: "{{ kubesealkeypub | b64encode}}"
-            tls.key: "{{ kubesealkey | b64encode}}"
+            tls.crt: "{{ kubesealkeypub }}"
+            tls.key: "{{ kubesealkey }}"
 
     - name: Je supprime le controleur sealed secret pour qu'il se rebuild avec les clés kubeseal
       kubernetes.core.k8s:
