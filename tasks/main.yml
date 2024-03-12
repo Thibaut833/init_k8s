@@ -265,15 +265,25 @@
         mode: "0710"
         remote_src: true
 
-    - name: Je déploie ma clé privée kubeseal
-      ansible.builtin.copy:
-        dest: /srv/kubesealkey
-        content: "{{ kubesealkey | b64decode }}"
+    - name: Je check si la paire de clé kubeseal existe
+      ansible.builtin.stat:
+        path: /srv/kubesealkey
+      register: check_kubesealkey
 
-    - name: Je déploie ma clé publique kubeseal
-      ansible.builtin.copy:
-        dest: /srv/kubesealkey.pub
-        content: "{{ kubesealkeypub | b64decode }}"
+    - name: Je crée ma paire de clé kubeseal
+      ansible.builtin.shell:
+        cmd: "openssl req -x509 -days 3650 -nodes -newkey rsa:4096 -keyout /srv/kubesealkey -out /srv/kubesealkey.pub -subj '/CN=sealed-secret/O=sealed-secret'"
+      when: not check_kubesealkey.stat.exists
+
+    - name: Je recupère le contenu du fichier kubesealkey
+      ansible.builtin.slurp:
+        src: /srv/kubesealkey
+      register: kubesealkey
+    
+    - name: Je recupère le contenu du fichier kubesealkey.pub
+      ansible.builtin.slurp:
+        src: /srv/kubesealkey.pub
+      register: kubesealkeypub
 
     - name: Je crée le secret contenant les clés kubeseal
       kubernetes.core.k8s:
@@ -289,8 +299,8 @@
           labels:
             sealedsecrets.bitnami.com/sealed-secrets-key: active
           data:
-            tls.crt: "{{ kubesealkeypub }}"
-            tls.key: "{{ kubesealkey }}"
+            tls.crt: "{{ kubesealkeypub.content }}"
+            tls.key: "{{ kubesealkey.content }}"
 
     - name: Je supprime le controleur sealed secret pour qu'il se rebuild avec les clés kubeseal
       kubernetes.core.k8s:
