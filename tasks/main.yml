@@ -278,10 +278,10 @@
     - name: Je download depuis S3 ma paire de clé si elle n'est par sur le serveur
       ansible.builtin.shell:
         cmd: |
-          export AWS_SECRET_ACCESS_KEY="{{ aws_secret_access_key }}"
-          export AWS_ACCESS_KEY_ID="{{ aws_access_key_id }}"
-          aws --region="{{ aws_s3_region}}" --endpoint-url="{{ aws_s3_endpoints }}" s3 cp s3://"{{ aws_s3_bucket }}"/kubesealkey /srv/kubesealkey
-          aws --region="{{ aws_s3_region }}" --endpoint-url="{{ aws_s3_endpoints }}" s3 cp s3://"{{ aws_s3_bucket }}"/kubesealkey.pub /srv/kubesealkey.pub
+          export AWS_SECRET_ACCESS_KEY={{ aws_secret_access_key }}
+          export AWS_ACCESS_KEY_ID={{ aws_access_key_id }}
+          aws --region={{ aws_s3_region}} --endpoint-url={{ aws_s3_endpoints }} s3 cp s3://{{ aws_s3_bucket }}/kubesealkey /srv/kubesealkey
+          aws --region={{ aws_s3_region }} --endpoint-url={{ aws_s3_endpoints }} s3 cp s3://{{ aws_s3_bucket }}/kubesealkey.pub /srv/kubesealkey.pub
       when: not check_kubesealkey.stat.exists
 
     - name: Je recupère le contenu du fichier kubesealkey
