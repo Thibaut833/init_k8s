@@ -265,14 +265,23 @@
         mode: "0710"
         remote_src: true
 
+    - name: J'installe awscli
+      ansible.builtin.apt:
+        name: awscli
+        state: present
+
     - name: Je check si la paire de clé kubeseal existe
       ansible.builtin.stat:
         path: /srv/kubesealkey
       register: check_kubesealkey
 
-    - name: Je crée ma paire de clé kubeseal
+    - name: Je download depuis S3 ma paire de clé si elle n'est par sur le serveur
       ansible.builtin.shell:
-        cmd: "openssl req -x509 -days 3650 -nodes -newkey rsa:4096 -keyout /srv/kubesealkey -out /srv/kubesealkey.pub -subj '/CN=sealed-secret/O=sealed-secret'"
+        cmd: |
+          export AWS_SECRET_ACCESS_KEY="{{ aws_secret_access_key }}"
+          export AWS_ACCESS_KEY_ID="{{ aws_access_key_id }}"
+          aws --region="{{ aws_s3_region}}" --endpoint-url="{{ aws_s3_endpoints }}" s3 cp s3://"{{ aws_s3_bucket }}"/kubesealkey /srv/kubesealkey
+          aws --region="{{ aws_s3_region }}" --endpoint-url="{{ aws_s3_endpoints }}" s3 cp s3://"{{ aws_s3_bucket }}"/kubesealkey.pub /srv/kubesealkey.pub
       when: not check_kubesealkey.stat.exists
 
     - name: Je recupère le contenu du fichier kubesealkey
