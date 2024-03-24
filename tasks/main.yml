@@ -250,11 +250,11 @@
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
-        src: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.0/controller.yaml
+        src: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.1/controller.yaml
 
     - name: J'installe l'outil kubeseal
       ansible.builtin.get_url:
-        url: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.0/kubeseal-0.26.0-linux-amd64.tar.gz
+        url: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.1/kubeseal-0.26.1-linux-amd64.tar.gz
         dest: /tmp/kubeseal.tar.gz
         mode: '0770'
 
