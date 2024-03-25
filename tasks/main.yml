@@ -304,8 +304,8 @@
           metadata:
             name: kubesealkeys
             namespace: kube-system
-          labels:
-            sealedsecrets.bitnami.com/sealed-secrets-key: active
+            labels:
+              sealedsecrets.bitnami.com/sealed-secrets-key: active
           data:
             tls.crt: "{{ kubesealkeypub.content }}"
             tls.key: "{{ kubesealkey.content }}"
