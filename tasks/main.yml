@@ -165,6 +165,41 @@
       ansible.builtin.set_fact:
         num_nodes: "{{ num_nodes_raw.stdout | int }}"
 
+- name: J'installe Helm
+  delegate_to: "{{ play_hosts | first }}"
+  run_once: true
+  block:
+    - name: J'ajoute la clé du repo helm
+      ansible.builtin.get_url:
+        url: https://baltocdn.com/helm/signing.asc
+        dest: /tmp/helm-signing.asc
+        mode: "a+r"
+        force: "true"
+
+    - name: Je vérifie la présence de la clé gpg helm dans le folder apt keyrings
+      ansible.builtin.stat:
+        path: "/etc/apt/keyrings/helm.gpg"
+      register: exists_helmasc
+
+    - name: Je de-armor la clé helm
+      ansible.builtin.shell: gpg --dearmor < /tmp/helm-signing.asc > /etc/apt/keyrings/helm.gpg
+      when: not exists_helmasc.stat.exists
+
+    - name: J'autorise la lecture pour tous sur la clé helm
+      ansible.builtin.file:
+        path: /etc/apt/keyrings/helm.gpg
+        mode: "a+r"
+
+    - name: J'ajoute le repository helm
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main"
+
+    - name: J'installe le paquet helm
+      ansible.builtin.apt:
+        name: helm
+        state: present
+        update_cache: true
+
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
     cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp']['content'] | b64decode }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
