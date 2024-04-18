@@ -284,12 +284,12 @@
     - name: Je télécharge l'archive Velero
       ansible.builtin.get_url:
         url: https://github.com/vmware-tanzu/velero/releases/download/v1.13.2/velero-v1.13.2-linux-amd64.tar.gz
-        dest: /tmp/velero-v1.13.2-linux-amd64.tar.gz
+        dest: /tmp/velero.tar.gz
         mode: '0770'
 
     - name: Je décompresse l'archive Velero
       ansible.builtin.unarchive:
-        src: /tmp/velero-v1.13.2-linux-amd64.tar.gz
+        src: /tmp/velero.tar.gz
         dest: /usr/local/bin
         include: 
           - velero
