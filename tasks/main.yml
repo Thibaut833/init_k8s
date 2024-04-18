@@ -297,6 +297,16 @@
         mode: "0710"
         remote_src: true
 
+    - name: Je crée le fichier credentials-velero
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/credentials-velero.j2"
+        dest: /srv/credentials-velero
+        mode: "770"
+
+    - name: Je lance l'installation de Velero
+      ansible.builtin.shell:
+        cmd: velero install --provider openebs --plugins openebs/velero-plugin:1.9.0 --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
+
 - name: J'installe secrets sealed controller
   delegate_to: "{{ play_hosts | first }}"
   run_once: true  
