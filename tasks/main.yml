@@ -6,6 +6,7 @@
     name:
       - open-iscsi
       - python3-kubernetes
+      - unzip
     state: present
     update_cache: true
 
