@@ -292,7 +292,7 @@
         src: /tmp/velero.tar.gz
         dest: /usr/local/bin
         include: 
-          - velero
+          - velero-v1.13.2-linux-amd64/velero
         mode: "0710"
         remote_src: true
 
