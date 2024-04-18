@@ -316,6 +316,8 @@
     - name: Je décompresse l'archive
       ansible.builtin.unarchive:
         src: /tmp/kubeseal.tar.gz
+        include: 
+          - kubeseal
         dest: /usr/local/bin
         mode: "0710"
         remote_src: true
