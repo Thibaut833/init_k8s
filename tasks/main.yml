@@ -277,6 +277,25 @@
         kubeconfig: /etc/kubernetes/admin.conf
         src: /srv/cstor-csi-disk.yaml
 
+- name: J'installe Velero
+  delegate_to: "{{ play_hosts | first }}"
+  run_once: true
+  block:
+    - name: Je télécharge l'archive Velero
+      ansible.builtin.get_url:
+        url: https://github.com/vmware-tanzu/velero/releases/download/v1.13.2/velero-v1.13.2-linux-amd64.tar.gz
+        dest: /tmp/velero-v1.13.2-linux-amd64.tar.gz
+        mode: '0770'
+
+    - name: Je décompresse l'archive Velero
+      ansible.builtin.unarchive:
+        src: /tmp/velero-v1.13.2-linux-amd64.tar.gz
+        dest: /usr/local/bin
+        include: 
+          - velero
+        mode: "0710"
+        remote_src: true
+
 - name: J'installe secrets sealed controller
   delegate_to: "{{ play_hosts | first }}"
   run_once: true  
