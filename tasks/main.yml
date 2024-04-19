@@ -308,7 +308,7 @@
         cmd: >
           velero install
           --kubeconfig /etc/kubernetes/admin.conf
-          --provider aws --plugins velero/velero-plugin-for-aws:v1.2.1
+          --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
           --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero 
           --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
 
