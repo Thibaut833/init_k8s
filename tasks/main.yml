@@ -304,7 +304,7 @@
         mode: "770"
 
     - name: Je vérifie si velero est installé
-      ansible.builtin.shell: kubectl get namespaces -o json
+      ansible.builtin.shell: kubectl --kubeconfig /etc/kubernetes/admin.conf get namespaces -o json
       register: namespaces_json
       failed_when: false
       changed_when: false
