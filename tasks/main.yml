@@ -308,12 +308,13 @@
         cmd: kubectl get namespaces --kubeconfig /etc/kubernetes/admin.conf -o json
       register: velero_allns
 
-    - debug:
-        msg: "{{ velero_allns.stdout }}"
 
     - name: Je verifie si velero est présent dans les namespaces
       ansible.builtin.set_fact:
-        velero_checkns: "{{'velero' in velero_allns.stdout | from_json }}"
+        velero_checkns: "{{'velero' in velero_allns.stdout }}"
+
+    - debug:
+        msg: "{{ velero_checkns }}"
 
     - name: Je lance l'installation de Velero
       ansible.builtin.shell:
@@ -326,7 +327,7 @@
 
     - name: Je vérifie les schedules velero
       ansible.builtin.shell:
-        cmd: velero schedule get -o json
+        cmd: velero schedule get --kubeconfig /etc/kubernetes/admin.conf -o json
       register: velero_schedules
 
     - debug:
