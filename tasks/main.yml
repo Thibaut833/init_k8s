@@ -311,7 +311,7 @@
 
     - name: Je verifie si velero est présent dans les namespaces
       ansible.builtin.set_fact:
-        velero_checkns: "{{'velero' in velero_allns.stdout }}"
+        velero_checkns: "{{'velerop' in velero_allns.stdout }}"
 
     - debug:
         msg: "{{ velero_checkns }}"
@@ -331,7 +331,7 @@
       register: velero_schedules
 
     - debug:
-        msg: "{{ velero_schedules.stdout | from_json }}"
+        msg: "{{ velero_schedules.stdout.items == 0 }}"
 
     - name: J'installe les schedules velero
       ansible.builtin.shell:
