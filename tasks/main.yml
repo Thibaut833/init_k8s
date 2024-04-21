@@ -314,7 +314,7 @@
         velero_namespace_exists: "{{ 'velero' in namespaces_json.stdout | from_json }}"
 
     - name: Je lance l'installation de Velero
-      when: velero_namespace_exists
+      when: not velero_namespace_exists
       ansible.builtin.shell:
         cmd: >
           velero install
