@@ -337,7 +337,7 @@
         cmd: "{{ item }}"
       when: velero_scheduleslist | length !=  velero_schedules_commands | length
       loop: velero_schedules_commands
-      var:
+      vars:
         velero_schedules_commands:
           - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
           - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="recipes" --selector="app=recipes"
