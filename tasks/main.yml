@@ -316,9 +316,9 @@
       ansible.builtin.shell:
         cmd: "{{ item }}"
       loop:
-        - velero schedule create uptimekumabackup --schedule="0 21 * * *" --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
-        - velero schedule create recipesbackup --schedule="0 21 * * *" --include-namespaces="recipes" --selector="app=recipes"
-        - velero schedule create authentikbackup --schedule="0 21 * * *" --include-namespaces="authentik" --selector="app=postgres-authentik"
+        - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
+        - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="recipes" --selector="app=recipes"
+        - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="authentik" --selector="app=postgres-authentik"
 
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
