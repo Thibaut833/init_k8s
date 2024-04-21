@@ -332,17 +332,16 @@
       ansible.builtin.set_fact:
         velero_scheduleslist: "{{ velero_schedules.stdout | from_json | json_query('items') }}"
 
-    - debug:
-        msg: "{{ velero_scheduleslist | length }}"
-
     - name: J'installe les schedules velero
       ansible.builtin.shell:
         cmd: "{{ item }}"
-      when: velero_scheduleslist | length != item | length
-      loop:
-        - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
-        - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="recipes" --selector="app=recipes"
-        - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="authentik" --selector="app=postgres-authentik"
+      when: velero_scheduleslist | length !=  velero_schedules_commands | length
+      loop: velero_schedules_commands
+      var:
+        velero_schedules_commands:
+          - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
+          - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="recipes" --selector="app=recipes"
+          - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="authentik" --selector="app=postgres-authentik"
 
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
