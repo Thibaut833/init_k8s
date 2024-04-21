@@ -338,7 +338,7 @@
     - name: J'installe les schedules velero
       ansible.builtin.shell:
         cmd: "{{ item }}"
-      ignore_errors: true
+      when: velero_scheduleslist | length != item | length
       loop:
         - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
         - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="recipes" --selector="app=recipes"
