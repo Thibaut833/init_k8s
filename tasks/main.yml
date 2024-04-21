@@ -331,7 +331,7 @@
       register: velero_schedules
 
     - debug:
-        msg: "{{ velero_schedules.stdout.items == 0 }}"
+        msg: "{{ velero_schedules.stdout.items | count == 0 }}"
 
     - name: J'installe les schedules velero
       ansible.builtin.shell:
