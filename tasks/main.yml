@@ -309,6 +309,9 @@
       failed_when: false
       changed_when: false
 
+    - debug:
+        msg: "{{ namespaces_json.stdout }}"
+
     - name: Analyser la sortie JSON pour vérifier l'existence du namespace Velero
       ansible.builtin.set_fact:
         velero_namespace_exists: "{{ 'velero' in namespaces_json.stdout | from_json }}"
