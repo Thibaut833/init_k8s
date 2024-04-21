@@ -314,14 +314,14 @@
         velero_namespace_exists: "{{ 'velero' in namespaces_json.stdout | from_json }}"
 
     - name: Je lance l'installation de Velero
-      ansible.builtin.shell:
       when: velero_namespace_exists
-      cmd: >
-        velero install
-        --kubeconfig /etc/kubernetes/admin.conf
-        --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
-        --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero 
-        --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
+      ansible.builtin.shell:
+        cmd: >
+          velero install
+          --kubeconfig /etc/kubernetes/admin.conf
+          --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
+          --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero 
+          --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
 
     - name: J'ajout la configuration zshrc
       ansible.builtin.blockinfile:
