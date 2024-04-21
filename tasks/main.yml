@@ -332,7 +332,7 @@
         msg: "{{ velero_schedules.stdout }}"
 
     - debug:
-        msg: "{{ velero_schedules.stdout.items[*] | length }}"
+        msg: "{{ velero_schedules.stdout.items[] | length }}"
 
     - name: J'installe les schedules velero
       ansible.builtin.shell:
