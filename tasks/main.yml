@@ -311,10 +311,7 @@
 
     - name: Je verifie si velero est présent dans les namespaces
       ansible.builtin.set_fact:
-        velero_checkns: "{{'velerop' in velero_allns.stdout }}"
-
-    - debug:
-        msg: "{{ velero_checkns }}"
+        velero_checkns: "{{'velero' in velero_allns.stdout }}"
 
     - name: Je lance l'installation de Velero
       ansible.builtin.shell:
@@ -324,6 +321,7 @@
           --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
           --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero 
           --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
+      when: velero_checkns is false
 
     - name: Je vérifie les schedules velero
       ansible.builtin.shell:
@@ -331,7 +329,7 @@
       register: velero_schedules
 
     - debug:
-        msg: "{{ velero_schedules.stdout.items | count == 0 }}"
+        msg: "{{ velero_schedules.stdout.items | from_json | length }}"
 
     - name: J'installe les schedules velero
       ansible.builtin.shell:
