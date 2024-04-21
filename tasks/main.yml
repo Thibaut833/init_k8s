@@ -165,6 +165,17 @@
       ansible.builtin.set_fact:
         num_nodes: "{{ num_nodes_raw.stdout | int }}"
 
+- name: Je fais rejoindre les noeuds sur le cluster kube
+  ansible.builtin.command:
+    cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp']['content'] | b64decode }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
+  register: workers_join_cluster
+  changed_when: workers_join_cluster.rc == 0
+  delegate_to: "{{ item }}"
+  run_once: true
+  loop: "{{ play_hosts[1:] }}"
+  no_log: true
+  ignore_errors: true
+
 - name: J'installe Helm
   delegate_to: "{{ play_hosts | first }}"
   run_once: true
@@ -199,17 +210,6 @@
         name: helm
         state: present
         update_cache: true
-
-- name: Je fais rejoindre les noeuds sur le cluster kube
-  ansible.builtin.command:
-    cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp']['content'] | b64decode }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
-  register: workers_join_cluster
-  changed_when: workers_join_cluster.rc == 0
-  delegate_to: "{{ item }}"
-  run_once: true
-  loop: "{{ play_hosts[1:] }}"
-  no_log: true
-  ignore_errors: true
 
 - name: J'installe OpenEBS
   delegate_to: "{{ play_hosts | first }}"
@@ -303,6 +303,18 @@
         dest: /srv/credentials-velero
         mode: "770"
 
+    - name: Je vérifie les namespaces
+      ansible.builtin.shell:
+        cmd: kubectl get namespaces --kubeconfig /etc/kubernetes/admin.conf -o json
+      register: velero_allns
+
+    - debug:
+        msg: "{{ velero_allns.stdout }}"
+
+    - name: Je verifie si velero est présent dans les namespaces
+      ansible.builtin.set_fact:
+        velero_checkns: "{{'velero' in velero_allns.stdout | from_json }}"
+
     - name: Je lance l'installation de Velero
       ansible.builtin.shell:
         cmd: >
@@ -311,6 +323,14 @@
           --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
           --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero 
           --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
+
+    - name: Je vérifie les schedules velero
+      ansible.builtin.shell:
+        cmd: velero schedule get -o json
+      register: velero_schedules
+
+    - debug:
+        msg: "{{ velero_schedules.stdout | from_json }}"
 
     - name: J'installe les schedules velero
       ansible.builtin.shell:
