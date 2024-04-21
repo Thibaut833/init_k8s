@@ -303,25 +303,22 @@
         dest: /srv/credentials-velero
         mode: "770"
 
-    - name: Je vérifie si velero est installé
-      ansible.builtin.shell: kubectl --kubeconfig /etc/kubernetes/admin.conf get namespaces -o json
-      register: namespaces_json
-      failed_when: false
-      changed_when: false
-
-    - name: Analyser la sortie JSON pour vérifier l'existence du namespace Velero
-      ansible.builtin.set_fact:
-        velero_namespace_exists: "{{ 'velero' in namespaces_json.stdout | from_json }}"
-
     - name: Je lance l'installation de Velero
-      when: not velero_namespace_exists
       ansible.builtin.shell:
         cmd: >
           velero install
-          --kubeconfig /etc/kubernetes/admin.conf
+          --kubeconfig /etc/kubernetes/admin.conf --wait
           --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
           --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero 
           --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
+
+    - name: J'installe les schedules velero
+      ansible.builtin.shell:
+        cmd: "{{ item }}"
+      loop:
+        - velero schedule create uptimekumabackup --schedule="0 21 * * *" --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
+        - velero schedule create recipesbackup --schedule="0 21 * * *" --include-namespaces="recipes" --selector="app=recipes"
+        - velero schedule create authentikbackup --schedule="0 21 * * *" --include-namespaces="authentik" --selector="app=postgres-authentik"
 
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
