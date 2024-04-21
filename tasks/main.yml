@@ -328,11 +328,12 @@
         cmd: velero schedule get --kubeconfig /etc/kubernetes/admin.conf -o json
       register: velero_schedules
 
-    - debug:
-        msg: "{{ velero_schedules.stdout }}"
+    - name: Je récupère le nombre de schedules velero
+      ansible.builtin.set_fact:
+        velero_scheduleslist: "{{ velero_schedules.stdout | from_json }}"
 
     - debug:
-        msg: "{{ velero_schedules.stdout.items[] | length }}"
+        msg: "{{ velero_scheduleslist.items | length }}"
 
     - name: J'installe les schedules velero
       ansible.builtin.shell:
