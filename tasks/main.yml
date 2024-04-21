@@ -329,7 +329,7 @@
         insertafter: EOF
         block: |
           source <(velero completion zsh)
-          alias v=velero'
+          alias v=velero
           complete -F __start_velero v
 
 - name: J'installe secrets sealed controller
