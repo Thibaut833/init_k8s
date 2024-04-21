@@ -323,7 +323,7 @@
           --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero 
           --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
 
-    - name: J'ajout la configuration zshrc
+    - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
         path: ~/.zshrc
         insertafter: EOF
