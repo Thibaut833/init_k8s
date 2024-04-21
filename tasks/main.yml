@@ -329,7 +329,7 @@
       register: velero_schedules
 
     - debug:
-        msg: "{{ velero_schedules.stdout.items | from_json | length }}"
+        msg: "{{ velero_schedules.stdout.items | length }}"
 
     - name: J'installe les schedules velero
       ansible.builtin.shell:
