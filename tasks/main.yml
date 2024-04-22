@@ -352,7 +352,9 @@
       loop: "{{ velero_restore_commands }}"
       vars:
         velero_restore_commands:
-          - velero restore create uptimekumarestore --kubeconfig /etc/kubernetes/admin.conf
+          - velero restore create uptimekumarestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=uptimekumabackup
+          - velero restore create recipesrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=recipesbackup
+          - velero restore create authentikrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=authentikbackup
          
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
