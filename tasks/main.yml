@@ -308,7 +308,6 @@
         cmd: kubectl get namespaces --kubeconfig /etc/kubernetes/admin.conf -o json
       register: velero_allns
 
-
     - name: Je verifie si velero est présent dans les namespaces
       ansible.builtin.set_fact:
         velero_checkns: "{{'velero' in velero_allns.stdout }}"
@@ -339,10 +338,22 @@
       loop: "{{ velero_schedules_commands }}"
       vars:
         velero_schedules_commands:
-          - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
-          - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="recipes" --selector="app=recipes"
-          - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --include-namespaces="authentik" --selector="app=postgres-authentik"
+          - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --ttl=120h0m0s --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
+          - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --ttl=120h0m0s --include-namespaces="recipes" --selector="app=recipes"
+          - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --ttl=120h0m0s --include-namespaces="authentik" --selector="app=postgres-authentik"
 
+    - name: Je lance la restauration des données via velero
+      ansible.builtin.shell:
+        cmd: "{{ item }}"
+      when: velero_checkns is false and
+            'uptime-kuma' not in velero_allns.stdout or
+            'recipes' not in velero_allns.stdout or
+            'authentik' not in velero_allns.stdout
+      loop: "{{ velero_restore_commands }}"
+      vars:
+        velero_restore_commands:
+          - velero restore create uptimekumarestore --kubeconfig /etc/kubernetes/admin.conf
+         
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
         path: ~/.zshrc
