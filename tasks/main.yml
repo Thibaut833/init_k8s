@@ -339,11 +339,11 @@
       loop: "{{ velero_schedules_commands }}"
       vars:
         velero_schedules_commands:
-          - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="45 21 * * *" --ttl=120h0m0s --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
-          - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="45 21 * * *" --ttl=120h0m0s --include-namespaces="recipes" --selector="app=recipes"
-          - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="45 21 * * *" --ttl=120h0m0s --include-namespaces="authentik" --selector="app=postgres-authentik"
-          - velero schedule create wallosbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="45 21 * * *" --ttl=120h0m0s --include-namespaces="wallos" --selector="app=wallos"
-          - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="45 21 * * *" --ttl=120h0m0s --include-namespaces="homarr" --selector="app=homarr"
+          - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
+          - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="recipes" --selector="app=recipes"
+          - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="authentik" --selector="app=postgres-authentik"
+          - velero schedule create wallosbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="wallos" --selector="app=wallos"
+          - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="homarr" --selector="app=homarr"
 
     - name: Je lance la restauration des données via velero
       ansible.builtin.shell:
