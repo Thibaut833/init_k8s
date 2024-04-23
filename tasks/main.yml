@@ -343,14 +343,12 @@
           - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --ttl=120h0m0s --include-namespaces="recipes" --selector="app=recipes"
           - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --ttl=120h0m0s --include-namespaces="authentik" --selector="app=postgres-authentik"
           - velero schedule create wallosbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --ttl=120h0m0s --include-namespaces="wallos" --selector="app=wallos"
+          - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="0 21 * * *" --ttl=120h0m0s --include-namespaces="homarr" --selector="app=homarr"
 
     - name: Je lance la restauration des données via velero
       ansible.builtin.shell:
         cmd: "{{ item }}"
-      when: velero_checkns is false and
-            'uptime-kuma' not in velero_allns.stdout or
-            'recipes' not in velero_allns.stdout or
-            'authentik' not in velero_allns.stdout
+      when: velero_checkns is false
       loop: "{{ velero_restore_commands }}"
       vars:
         velero_restore_commands:
@@ -358,6 +356,7 @@
           - velero restore create recipesrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=recipesbackup
           - velero restore create authentikrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=authentikbackup
           - velero restore create wallosrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=wallosbackup
+          - velero restore create homarrrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=homarrbackup
          
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
