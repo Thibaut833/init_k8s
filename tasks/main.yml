@@ -357,7 +357,7 @@
           - velero restore create authentikrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=authentikbackup
           - velero restore create wallosrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=wallosbackup
           - velero restore create homarrrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=homarrbackup
-         
+
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
         path: ~/.zshrc
