@@ -335,6 +335,7 @@
       ansible.builtin.shell:
         cmd: "{{ item }}"
       when: velero_scheduleslist | length !=  velero_schedules_commands | length
+      ignore_errors: true
       loop: "{{ velero_schedules_commands }}"
       vars:
         velero_schedules_commands:
