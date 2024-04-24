@@ -344,10 +344,8 @@
             mode: "0750"
 
         - name: J'applique le kustomization velero
-          kubernetes.core.k8s:
-            state: present
-            kubeconfig: /etc/kubernetes/admin.conf
-            definition: "{{ lookup('kubernetes.core.kustomize', dir='/srv/velero/kustomization.yml', binary_path='/usr/bin/kubectl') }}"
+          ansible.builtin.shell:
+            cmd: "kubectl apply --kubeconfig /etc/kubernetes/admin.conf -k /srv/velero"
 
     - name: Je vérifie les schedules velero
       ansible.builtin.shell:
