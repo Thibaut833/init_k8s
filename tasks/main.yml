@@ -322,6 +322,34 @@
           --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
       when: velero_checkns is false
 
+    - name: Je patch la timezone des conteneurs velero
+      block:
+        - name: Je patch la timezone du deployment velero
+          kubernetes.core.k8s_json_patch:
+            kind: Deployment
+            namespace: velero
+            name: velero
+            patch:
+            - op: add
+              path: /spec/template/spec/containers/0/env/7/name
+              value: TZ
+            - op: add
+              path: /spec/template/spec/containers/0/env/7/value
+              value: "Europe/Paris"
+
+        - name: Je patch la timezone du daemonset velero
+          kubernetes.core.k8s_json_patch:
+            kind: DaemonSet
+            namespace: velero
+            name: node-agent
+            patch:
+            - op: add
+              path: /spec/template/spec/containers/0/env/7/name
+              value: TZ
+            - op: add
+              path: /spec/template/spec/containers/0/env/7/value
+              value: "Europe/Paris"
+
     - name: Je vérifie les schedules velero
       ansible.builtin.shell:
         cmd: velero schedule get --kubeconfig /etc/kubernetes/admin.conf -o json
@@ -339,11 +367,11 @@
       loop: "{{ velero_schedules_commands }}"
       vars:
         velero_schedules_commands:
-          - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
-          - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="recipes" --selector="app=recipes"
-          - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="authentik" --selector="app=postgres-authentik"
-          - velero schedule create wallosbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="wallos" --selector="app=wallos"
-          - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="55 21 * * *" --ttl=120h0m0s --include-namespaces="homarr" --selector="app=homarr"
+          - velero schedule create uptimekumabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="05 19 * * *" --ttl=120h0m0s --include-namespaces="uptime-kuma" --selector="app=uptime-kuma"
+          - velero schedule create recipesbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="05 19 * * *" --ttl=120h0m0s --include-namespaces="recipes" --selector="app=recipes"
+          - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="05 19 * * *" --ttl=120h0m0s --include-namespaces="authentik" --selector="app=postgres-authentik"
+          - velero schedule create wallosbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="05 19 * * *" --ttl=120h0m0s --include-namespaces="wallos" --selector="app=wallos"
+          - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="05 19 * * *" --ttl=120h0m0s --include-namespaces="homarr" --selector="app=homarr"
 
     - name: Je lance la restauration des données via velero
       ansible.builtin.shell:
