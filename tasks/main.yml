@@ -313,46 +313,40 @@
         velero_checkns: "{{'velero' in velero_allns.stdout }}"
 
     - name: Je lance l'installation de Velero
-      ansible.builtin.shell:
-        cmd: >
-          velero install
-          --kubeconfig /etc/kubernetes/admin.conf --wait
-          --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
-          --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero 
-          --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}"
       when: velero_checkns is false
-
-    - name: Je patch la timezone des conteneurs velero
       block:
-        - name: Je patch la timezone du deployment velero
-          kubernetes.core.k8s_json_patch:
-            api_version: apps/v1
-            kind: Deployment
-            namespace: velero
-            kubeconfig: /etc/kubernetes/admin.conf
-            name: velero
-            patch:
-            - op: add
-              path: /spec/template/spec/containers/0/env/7/name
-              value: TZ
-            - op: add
-              path: /spec/template/spec/containers/0/env/7/value
-              value: "Europe/Paris"
+        - name: Je crée le dossier velero
+          ansible.builtin.file:
+            path: /srv/velero
+            state: directory
+            mode: '0750'
 
-        - name: Je patch la timezone du daemonset velero
-          kubernetes.core.k8s_json_patch:
-            api_version: apps/v1
-            kind: DaemonSet
-            namespace: velero
-            kubeconfig: /etc/kubernetes/admin.conf
-            name: node-agent
-            patch:
-            - op: add
-              path: /spec/template/spec/containers/0/env/7/name
-              value: TZ
-            - op: add
-              path: /spec/template/spec/containers/0/env/7/value
-              value: "Europe/Paris"
+        - name: Je crée le manifests velero 
+          ansible.builtin.shell:
+            cmd: >
+              velero install
+              --kubeconfig /etc/kubernetes/admin.conf --wait
+              --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
+              --features=EnableCSI --bucket backupvol --secret-file /srv/credentials-velero 
+              --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}" 
+              --dry-run -o yaml > /srv/velero/manifest-velero.yml
+
+        - name: Je copie le kustomization velero
+          ansible.builtin.copy:
+            src: "{{ role_path }}/files/kustomization-velero.yml"
+            dest: /srv/velero/kustomization.yml
+            mode: "0750"
+
+        - name: Je copie le patch TZ velero
+          ansible.builtin.copy:
+            src: "{{ role_path }}/files/tzpatch.yml"
+            dest: /srv/velero/tzpatch.yml
+            mode: "0750"
+
+        - name: J'applique le kustomization velero
+          kubernetes.core.k8s:
+            state: present
+            definition: "{{ lookup('kubernetes.core.kustomize', dir='/srv/velero/kustomization.yml') }}"
 
     - name: Je vérifie les schedules velero
       ansible.builtin.shell:

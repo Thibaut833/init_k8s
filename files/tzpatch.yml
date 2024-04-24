@@ -1,0 +1,6 @@
+- op: add
+  path: /spec/template/spec/containers/0/env/7/name
+  value: TZ
+- op: add
+  path: /spec/template/spec/containers/0/env/7/value
+  value: "Europe/Paris"
