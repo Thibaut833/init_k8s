@@ -328,6 +328,7 @@
           kubernetes.core.k8s_json_patch:
             kind: Deployment
             namespace: velero
+            kubeconfig: /etc/kubernetes/admin.conf
             name: velero
             patch:
             - op: add
@@ -341,6 +342,7 @@
           kubernetes.core.k8s_json_patch:
             kind: DaemonSet
             namespace: velero
+            kubeconfig: /etc/kubernetes/admin.conf
             name: node-agent
             patch:
             - op: add
