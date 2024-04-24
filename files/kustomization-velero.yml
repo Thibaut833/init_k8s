@@ -8,9 +8,11 @@ patches:
     version: v1
     kind: Deployment
     name: velero
+    namespace: velero
 - path: tzpatch.yml
   target:
     group: apps
     version: v1
     kind: DaemonSet
     name: node-agent
+    namespace: velero
