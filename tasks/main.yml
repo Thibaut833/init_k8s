@@ -373,10 +373,20 @@
           - velero schedule create wallosbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces="wallos" --selector="app=wallos"
           - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces="homarr" --selector="app=homarr"
 
+    - name: Je vérifie les restores velero
+      ansible.builtin.shell:
+        cmd: velero restore get --kubeconfig /etc/kubernetes/admin.conf -o json
+      register: velero_restores
+
+    - name: Je récupère le nombre de restores velero
+      ansible.builtin.set_fact:
+        velero_restoreslist: "{{ velero_restores.stdout | from_json | json_query('items') }}"
+
     - name: Je lance la restauration des données via velero
       ansible.builtin.shell:
         cmd: "{{ item }}"
-      when: velero_checkns is false
+      when: velero_checkns is false or
+            velero_restoreslist | length != velero_scheduleslist | length
       until:
         - restore_command_velero.rc == 0
       loop: "{{ velero_restore_commands }}"
