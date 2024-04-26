@@ -346,6 +346,7 @@
         - name: Je crée le namespace velero
           kubernetes.core.k8s:
             state: present
+            kubeconfig: /etc/kubernetes/admin.conf
             definition:
               apiVersion: v1
               kind: Namespace
