@@ -362,7 +362,7 @@
     - name: J'installe les schedules velero
       ansible.builtin.shell:
         cmd: "{{ item }}"
-      when: velero_scheduleslist | length !=  velero_schedules_commands | length
+      when: velero_scheduleslist | length != velero_schedules_commands | length
       ignore_errors: true
       loop: "{{ velero_schedules_commands }}"
       vars:
@@ -373,11 +373,26 @@
           - velero schedule create wallosbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces="wallos" --selector="app=wallos"
           - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces="homarr" --selector="app=homarr"
 
+    - name: Je regarde le nombre de backup tant qu'il n'y en a pas autant que mes schedules
+      vars:
+        velero_backupslist: "{{ velero_backupslist | default([]) }}"
+      until: velero_backupslist | length != velero_scheduleslist | length
+      block:
+        - name: Je regarde si les backups sont présents
+          ansible.builtin.shell:
+            cmd: velero backup get --kubeconfig /etc/kubernetes/admin.conf -o json
+          register: velero_backups
+
+        - name: Je récupère le nombre de backups velero
+          ansible.builtin.set_fact:
+            velero_backupslist: "{{ velero_backups.stdout | from_json | json_query('items') }}"
+
     - name: Je lance la restauration des données via velero
       ansible.builtin.shell:
         cmd: "{{ item }}"
       when: velero_checkns is false
       loop: "{{ velero_restore_commands }}"
+      register: restore_command_velero
       vars:
         velero_restore_commands:
           - velero restore create uptimekumarestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=uptimekumabackup
