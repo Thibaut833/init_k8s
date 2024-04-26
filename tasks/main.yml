@@ -343,6 +343,23 @@
             dest: /srv/velero/tzpatch.yml
             mode: "0750"
 
+        - name: Je crée le namespace velero
+          kubernetes.core.k8s:
+            state: present
+            definition:
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: velero
+                labels:
+                  component: velero
+                  pod-security.kubernetes.io/audit: privileged
+                  pod-security.kubernetes.io/audit-version: latest
+                  pod-security.kubernetes.io/enforce: privileged
+                  pod-security.kubernetes.io/enforce-version: latest
+                  pod-security.kubernetes.io/warn: privileged
+                  pod-security.kubernetes.io/warn-version: latest
+
         - name: J'applique le kustomization velero
           ansible.builtin.shell:
             cmd: "kubectl apply --kubeconfig /etc/kubernetes/admin.conf -k /srv/velero"
