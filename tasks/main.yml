@@ -345,7 +345,7 @@
 
         - name: J'applique le kustomization velero
           ansible.builtin.shell:
-            cmd: "kubectl apply --kubeconfig /etc/kubernetes/admin.conf -k /srv/velero"
+            cmd: "kubectl apply --kubeconfig /etc/kubernetes/admin.conf -k /srv/velero --wait"
 
     - name: Je vérifie les schedules velero
       ansible.builtin.shell:
