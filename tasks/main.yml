@@ -373,24 +373,12 @@
           - velero schedule create wallosbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces="wallos" --selector="app=wallos"
           - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces="homarr" --selector="app=homarr"
 
-    - name: Je regarde le nombre de backup tant qu'il n'y en a pas autant que mes schedules
-      vars:
-        velero_backupslist: "{{ velero_backupslist | default([]) }}"
-      until: velero_backupslist | length != velero_scheduleslist | length
-      block:
-        - name: Je regarde si les backups sont présents
-          ansible.builtin.shell:
-            cmd: velero backup get --kubeconfig /etc/kubernetes/admin.conf -o json
-          register: velero_backups
-
-        - name: Je récupère le nombre de backups velero
-          ansible.builtin.set_fact:
-            velero_backupslist: "{{ velero_backups.stdout | from_json | json_query('items') }}"
-
     - name: Je lance la restauration des données via velero
       ansible.builtin.shell:
         cmd: "{{ item }}"
       when: velero_checkns is false
+      until:
+        - restore_command_velero.rc == 0
       loop: "{{ velero_restore_commands }}"
       register: restore_command_velero
       vars:
