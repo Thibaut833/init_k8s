@@ -389,7 +389,7 @@
             velero_restoreslist | length != velero_scheduleslist | length
       until:
         - restore_command_velero.rc == 0
-      retries: 5
+      retries: 30
       delay: 10
       loop: "{{ velero_restore_commands }}"
       register: restore_command_velero
