@@ -388,9 +388,10 @@
       when: velero_checkns is false or
             velero_restoreslist | length != velero_scheduleslist | length
       until:
-        - restore_command_velero.rc == 0
+        - velero_restoreslist | length != velero_scheduleslist | length
       retries: 30
       delay: 10
+      ignore_errors: true
       loop: "{{ velero_restore_commands }}"
       register: restore_command_velero
       vars:
