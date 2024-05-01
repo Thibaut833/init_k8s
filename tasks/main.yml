@@ -231,7 +231,7 @@
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
-        src: https://openebs-archive.github.io/charts/cstor-operator.yaml
+        src: https://openebs.github.io/charts/cstor-operator.yaml
         wait: true
         wait_timeout: 480
         wait_sleep: 20
