@@ -372,6 +372,7 @@
           - velero schedule create authentikbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --selector="app=postgres-authentik"
           - velero schedule create wallosbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --selector="app=wallos"
           - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --selector="app=homarr"
+          - velero schedule create vaultwardenbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --selector="app=vaultwarden"
 
     - name: Je vérifie les restores velero
       ansible.builtin.shell:
@@ -401,6 +402,7 @@
           - velero restore create authentikrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=authentikbackup --wait
           - velero restore create wallosrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=wallosbackup --wait
           - velero restore create homarrrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=homarrbackup --wait
+          - velero restore create vaultwardenrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=vaultwardenbackup --wait
 
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
