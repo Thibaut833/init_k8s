@@ -374,7 +374,7 @@
           - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --selector="app=homarr"
           - velero schedule create vaultwardenbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --selector="app=vaultwarden"
           - velero schedule create gotifybackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --selector="app=gotify"
-          - velero schedule create fireflyiiibackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --selector="app=firefly-iii" --selector"app=firefly-iii-importer"
+          - velero schedule create fireflyiiibackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --selector="app=firefly-iii" --selector="app=firefly-iii-importer"
 
     - name: Je vérifie les restores velero
       ansible.builtin.shell:
