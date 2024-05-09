@@ -296,6 +296,86 @@
         kubeconfig: /etc/kubernetes/admin.conf
         src: /srv/cstor-csi-disk.yaml
 
+- name: J'installe secrets sealed controller
+  delegate_to: "{{ play_hosts | first }}"
+  run_once: true  
+  block:
+    - name: J'installe le controleur
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        src: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.1/controller.yaml
+
+    - name: J'installe l'outil kubeseal
+      ansible.builtin.get_url:
+        url: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.1/kubeseal-0.26.1-linux-amd64.tar.gz
+        dest: /tmp/kubeseal.tar.gz
+        mode: '0770'
+
+    - name: Je décompresse l'archive
+      ansible.builtin.unarchive:
+        src: /tmp/kubeseal.tar.gz
+        include: 
+          - kubeseal
+        dest: /usr/local/bin
+        mode: "0710"
+        remote_src: true
+
+    - name: J'installe awscli
+      ansible.builtin.apt:
+        name: awscli
+        state: present
+
+    - name: Je check si la paire de clé kubeseal existe
+      ansible.builtin.stat:
+        path: /srv/kubesealkey
+      register: check_kubesealkey
+
+    - name: Je download depuis S3 ma paire de clé si elle n'est par sur le serveur
+      ansible.builtin.shell:
+        cmd: "{{ item }}"
+      loop:
+        - AWS_SECRET_ACCESS_KEY={{ aws_secret_access_key }} AWS_ACCESS_KEY_ID={{ aws_access_key_id }} aws --region={{ aws_s3_region }} --endpoint-url={{ aws_s3_endpoints }} s3 cp s3://{{ aws_s3_bucket }}/kubesealkey /srv/kubesealkey
+        - AWS_SECRET_ACCESS_KEY={{ aws_secret_access_key }} AWS_ACCESS_KEY_ID={{ aws_access_key_id }} aws --region={{ aws_s3_region }} --endpoint-url={{ aws_s3_endpoints }} s3 cp s3://{{ aws_s3_bucket }}/kubesealkey.pub /srv/kubesealkey.pub
+      when: not check_kubesealkey.stat.exists
+
+    - name: Je recupère le contenu du fichier kubesealkey
+      ansible.builtin.slurp:
+        src: /srv/kubesealkey
+      register: kubesealkey
+    
+    - name: Je recupère le contenu du fichier kubesealkey.pub
+      ansible.builtin.slurp:
+        src: /srv/kubesealkey.pub
+      register: kubesealkeypub
+
+    - name: Je crée le secret contenant les clés kubeseal
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/kubernetes/admin.conf
+        definition:
+          apiVersion: v1
+          kind: Secret
+          type: kubernetes.io/tls
+          metadata:
+            name: kubesealkeys
+            namespace: kube-system
+            labels:
+              sealedsecrets.bitnami.com/sealed-secrets-key: active
+          data:
+            tls.crt: "{{ kubesealkeypub.content }}"
+            tls.key: "{{ kubesealkey.content }}"
+
+    - name: Je supprime le controleur sealed secret pour qu'il se rebuild avec les clés kubeseal
+      kubernetes.core.k8s:
+        state: absent
+        kubeconfig: /etc/kubernetes/admin.conf
+        api_version: v1
+        kind: Pod
+        namespace: kube-system
+        label_selectors:
+          - "name=sealed-secrets-controller"
+
 - name: J'installe Velero
   delegate_to: "{{ play_hosts | first }}"
   run_once: true
@@ -435,86 +515,6 @@
           source <(velero completion zsh)
           alias v=velero
           complete -F __start_velero v
-
-- name: J'installe secrets sealed controller
-  delegate_to: "{{ play_hosts | first }}"
-  run_once: true  
-  block:
-    - name: J'installe le controleur
-      kubernetes.core.k8s:
-        state: present
-        kubeconfig: /etc/kubernetes/admin.conf
-        src: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.1/controller.yaml
-
-    - name: J'installe l'outil kubeseal
-      ansible.builtin.get_url:
-        url: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.1/kubeseal-0.26.1-linux-amd64.tar.gz
-        dest: /tmp/kubeseal.tar.gz
-        mode: '0770'
-
-    - name: Je décompresse l'archive
-      ansible.builtin.unarchive:
-        src: /tmp/kubeseal.tar.gz
-        include: 
-          - kubeseal
-        dest: /usr/local/bin
-        mode: "0710"
-        remote_src: true
-
-    - name: J'installe awscli
-      ansible.builtin.apt:
-        name: awscli
-        state: present
-
-    - name: Je check si la paire de clé kubeseal existe
-      ansible.builtin.stat:
-        path: /srv/kubesealkey
-      register: check_kubesealkey
-
-    - name: Je download depuis S3 ma paire de clé si elle n'est par sur le serveur
-      ansible.builtin.shell:
-        cmd: "{{ item }}"
-      loop:
-        - AWS_SECRET_ACCESS_KEY={{ aws_secret_access_key }} AWS_ACCESS_KEY_ID={{ aws_access_key_id }} aws --region={{ aws_s3_region }} --endpoint-url={{ aws_s3_endpoints }} s3 cp s3://{{ aws_s3_bucket }}/kubesealkey /srv/kubesealkey
-        - AWS_SECRET_ACCESS_KEY={{ aws_secret_access_key }} AWS_ACCESS_KEY_ID={{ aws_access_key_id }} aws --region={{ aws_s3_region }} --endpoint-url={{ aws_s3_endpoints }} s3 cp s3://{{ aws_s3_bucket }}/kubesealkey.pub /srv/kubesealkey.pub
-      when: not check_kubesealkey.stat.exists
-
-    - name: Je recupère le contenu du fichier kubesealkey
-      ansible.builtin.slurp:
-        src: /srv/kubesealkey
-      register: kubesealkey
-    
-    - name: Je recupère le contenu du fichier kubesealkey.pub
-      ansible.builtin.slurp:
-        src: /srv/kubesealkey.pub
-      register: kubesealkeypub
-
-    - name: Je crée le secret contenant les clés kubeseal
-      kubernetes.core.k8s:
-        state: present
-        kubeconfig: /etc/kubernetes/admin.conf
-        definition:
-          apiVersion: v1
-          kind: Secret
-          type: kubernetes.io/tls
-          metadata:
-            name: kubesealkeys
-            namespace: kube-system
-            labels:
-              sealedsecrets.bitnami.com/sealed-secrets-key: active
-          data:
-            tls.crt: "{{ kubesealkeypub.content }}"
-            tls.key: "{{ kubesealkey.content }}"
-
-    - name: Je supprime le controleur sealed secret pour qu'il se rebuild avec les clés kubeseal
-      kubernetes.core.k8s:
-        state: absent
-        kubeconfig: /etc/kubernetes/admin.conf
-        api_version: v1
-        kind: Pod
-        namespace: kube-system
-        label_selectors:
-          - "name=sealed-secrets-controller"
 
 - name: J'installe fluxcd
   delegate_to: "{{ play_hosts | first }}"
