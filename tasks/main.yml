@@ -418,14 +418,14 @@
       register: restore_command_velero
       vars:
         velero_restore_commands:
-          - velero restore create uptimekumarestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=uptimekumabackup --wait
-          - velero restore create recipesrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=recipesbackup --wait
-          - velero restore create authentikrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=authentikbackup --wait
-          - velero restore create wallosrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=wallosbackup --wait
-          - velero restore create homarrrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=homarrbackup --wait
-          - velero restore create vaultwardenrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=vaultwardenbackup --wait
-          - velero restore create gotifyrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=gotifybackup --wait
-          - velero restore create fireflyiiirestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=fireflyiiibackup --wait
+          - velero restore create uptimekumarestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=uptimekumabackup
+          - velero restore create recipesrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=recipesbackup
+          - velero restore create authentikrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=authentikbackup
+          - velero restore create wallosrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=wallosbackup
+          - velero restore create homarrrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=homarrbackup
+          - velero restore create vaultwardenrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=vaultwardenbackup
+          - velero restore create gotifyrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=gotifybackup
+          - velero restore create fireflyiiirestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=fireflyiiibackup
 
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
