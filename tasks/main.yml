@@ -472,6 +472,8 @@
           - velero schedule create homarrbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces homarr
           - velero schedule create vaultwardenbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces vaultwarden
           - velero schedule create gotifybackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces gotify
+          - velero schedule create prometheusbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces prometheus
+          - velero schedule create grafanabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces grafana
 
     - name: Je vérifie les restores velero
       ansible.builtin.shell:
@@ -502,6 +504,8 @@
           - velero restore create homarrrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=homarrbackup --wait
           - velero restore create vaultwardenrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=vaultwardenbackup --wait
           - velero restore create gotifyrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=gotifybackup --wait
+          - velero restore create prometheusrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=prometheusbackup --wait
+          - velero restore create grafanarestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=grafanabackup --wait
 
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
