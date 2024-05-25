@@ -292,7 +292,6 @@
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
         src: /srv/cspc.yaml
-      ignore_errors: true
 
     - name: Je copie mon template pour le cstor-csi-disk
       ansible.builtin.template:
@@ -300,7 +299,8 @@
         dest: /srv/cstor-csi-disk.yaml
         mode: "660"
 
-    - name: Je lance le déploiement de openebs cstorpoolcluster
+    - name: Je lance le déploiement de openebs cstor-csi-disk
+      ignore_errors: true
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
