@@ -288,6 +288,7 @@
         mode: "660"
 
     - name: Je lance le déploiement de openebs cstorpoolcluster
+      ignore_errors: true
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
