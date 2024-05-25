@@ -169,6 +169,7 @@
       kubernetes.core.k8s_taint:
         state: absent
         name: kub0
+        kubeconfig: /etc/kubernetes/admin.conf
         taints:
           - effect: NoSchedule
             key: node-role.kubernetes.io/control-plane
