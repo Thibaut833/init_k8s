@@ -165,6 +165,14 @@
       ansible.builtin.set_fact:
         num_nodes: "{{ num_nodes_raw.stdout | int }}"
 
+    - name: Je mets le controlplane en schedule
+      kubernetes.core.k8s_taint:
+        state: absent
+        name: kub0
+        taints:
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/control-plane
+
 - name: Je fais rejoindre les noeuds sur le cluster kube
   ansible.builtin.command:
     cmd: "{% if hostvars[groups['kub'][0]]['kubeadm_join'] is not defined %}{{ hostvars[groups['kub'][0]]['kubeadm_join_slurp']['content'] | b64decode }}{% else %}{{ hostvars[groups['kub'][0]]['kubeadm_join'] }}{% endif %}"
