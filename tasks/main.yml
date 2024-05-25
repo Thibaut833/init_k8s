@@ -434,7 +434,7 @@
           ansible.builtin.shell:
             cmd: >
               velero install
-              --kubeconfig /etc/kubernetes/admin.conf --wait
+              --kubeconfig /etc/kubernetes/admin.conf --wait --features=EnableCSI
               --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
               --bucket backupvol --secret-file /srv/credentials-velero 
               --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}" 
