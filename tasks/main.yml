@@ -484,6 +484,7 @@
           - velero schedule create prometheusbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces prometheus
           - velero schedule create grafanabackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces grafana
           - velero schedule create valheimbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces valheim
+          - velero schedule create keycloakbackup --kubeconfig /etc/kubernetes/admin.conf --schedule="00 22 * * *" --ttl=120h0m0s --include-namespaces keycloak
 
     - name: Je vérifie les restores velero
       ansible.builtin.shell:
@@ -516,6 +517,7 @@
           - velero restore create prometheusrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=prometheusbackup --wait
           - velero restore create grafanarestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=grafanabackup --wait
           - velero restore create valheimrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=valheimbackup --wait
+          - velero restore create keycloakrestore --kubeconfig /etc/kubernetes/admin.conf --from-schedule=keycloakbackup --wait
 
     - name: J'ajoute la configuration zshrc
       ansible.builtin.blockinfile:
