@@ -155,7 +155,7 @@
           kubernetes.core.k8s:
             state: present
             kubeconfig: /etc/kubernetes/admin.conf
-            src: https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/calico.yaml
+            src: "https://raw.githubusercontent.com/projectcalico/calico/{{ calicoVer }}/manifests/calico.yaml"
 
     - name: Je lance la commande pour récupérer le nombre de nodes
       ansible.builtin.shell: kubectl get --kubeconfig=/etc/kubernetes/admin.conf nodes --no-headers | wc -l
@@ -226,7 +226,7 @@
   block:
     - name: Je télécharge k9s 
       ansible.builtin.get_url:
-        url: https://github.com/derailed/k9s/releases/download/v0.32.4/k9s_Linux_amd64.tar.gz
+        url: "https://github.com/derailed/k9s/releases/download/{{ k9sVer }}/k9s_Linux_amd64.tar.gz"
         dest: /tmp/k9s.tar.gz
         mode: '0770'
 
@@ -314,11 +314,11 @@
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/kubernetes/admin.conf
-        src: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.1/controller.yaml
+        src: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ sealedVer }}/controller.yaml"
 
     - name: J'installe l'outil kubeseal
       ansible.builtin.get_url:
-        url: https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.1/kubeseal-0.26.1-linux-amd64.tar.gz
+        url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ sealedVer }}/kubeseal-{{ sealedVer }}-linux-amd64.tar.gz"
         dest: /tmp/kubeseal.tar.gz
         mode: '0770'
 
@@ -392,7 +392,7 @@
   block:
     - name: Je télécharge l'archive Velero
       ansible.builtin.get_url:
-        url: https://github.com/vmware-tanzu/velero/releases/download/v1.13.2/velero-v1.13.2-linux-amd64.tar.gz
+        url: "https://github.com/vmware-tanzu/velero/releases/download/{{ veleroVer }}/velero-{{ veleroVer }}-linux-amd64.tar.gz"
         dest: /tmp/velero.tar.gz
         mode: '0770'
 
@@ -402,7 +402,7 @@
         dest: /usr/local/bin
         extra_opts: ['--strip-components=1', '--show-stored-names']
         include: 
-          - velero-v1.13.2-linux-amd64/velero
+          - "velero-{{ veleroVer }}-linux-amd64/velero"
         mode: "0710"
         remote_src: true
 
@@ -435,7 +435,7 @@
             cmd: >
               velero install
               --kubeconfig /etc/kubernetes/admin.conf --wait --features=EnableCSI
-              --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:v1.9.2
+              --use-node-agent --provider aws --plugins velero/velero-plugin-for-aws:{{ veleroPluginAwsVer }}
               --bucket backupvol --secret-file /srv/credentials-velero 
               --backup-location-config region="{{ aws_s3_region }}",s3ForcePathStyle="true",s3Url="{{ aws_s3_endpoints }}" 
               --dry-run -o yaml > /srv/velero/manifest-velero.yml
@@ -532,7 +532,7 @@
   block:
     - name: Je télécharge l'achive fluxcd
       ansible.builtin.get_url:
-        url: https://github.com/fluxcd/flux2/releases/download/v2.2.3/flux_2.2.3_linux_amd64.tar.gz
+        url: "https://github.com/fluxcd/flux2/releases/download/v{{ fluxVer }}/flux_{{ fluxVer }}_linux_amd64.tar.gz"
         dest: /tmp/flux.tar.gz
         mode: '0770'
 
