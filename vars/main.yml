@@ -1,7 +1,7 @@
 ---
 # vars file for init_k8s
 calicoVer: "v3.27.0"
-k9sVer: "v0.32.4"
+k9sVer: "v0.32.5"
 sealedVer: "0.26.3"
 veleroVer: "v1.13.2"
 veleroPluginAwsVer: "v1.9.2"
